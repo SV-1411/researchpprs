@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -24,14 +24,14 @@ const ReviewerDashboard = () => {
   const [alert, setAlert] = useState(null);
   const [reviewerNotifications, setReviewerNotifications] = useState([]);
   const [reviewerSearchTerm, setReviewerSearchTerm] = useState('');
-  const [reviewerSortBy, setReviewerSortBy] = useState('recent');
+  const [reviewerSortBy, setReviewerSortBy] = useState('title_az');
   const [showAllReviewerPapers, setShowAllReviewerPapers] = useState(false);
 
   useEffect(() => {
     loadReviewerData();
-  }, []);
+  }, [loadReviewerData]);
 
-  const loadReviewerData = async () => {
+  const loadReviewerData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -54,7 +54,7 @@ const ReviewerDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const handleStartReview = (paper) => {
     setSelectedPaper(paper);
