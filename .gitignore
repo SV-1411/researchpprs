@@ -1,0 +1,6 @@
+node_modules
+.vercel
+
+# Environment variables
+backend/.env
+.env
