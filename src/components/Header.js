@@ -15,6 +15,15 @@ const Header = () => {
 
   return (
     <>
+      {/* Top Badge Area */}
+      <div className="bg-white border-b border-slate-200 py-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
+          <span className="text-sm font-medium text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-300">
+            ISSN: XXXX-XXXX
+          </span>
+        </div>
+      </div>
+
       <style jsx>{`
         .header-links li span {
           position: relative;
@@ -41,7 +50,7 @@ const Header = () => {
         }
       `}</style>
 
-      <header className="bg-white shadow-lg h-24 hidden md:flex">
+      <header className="bg-white shadow-lg h-28 hidden md:flex">
         <Link to="/" className="border flex-shrink-0 flex items-center justify-center px-4 lg:px-6 xl:px-8">
           <img 
             src={logo} 
@@ -50,9 +59,14 @@ const Header = () => {
           />
         </Link>
         
-        {/* Navigation Links - Directly in navbar */}
-        <div className="flex items-center ml-4 xl:ml-8 mr-auto">
-          <nav className="hidden lg:flex items-center gap-x-6 xl:gap-x-8">
+        {/* IJEPA Full Name and Navigation Links - Centered */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center mb-2">
+            <h1 className="text-2xl font-bold text-academic-900">
+              International Journal of Engineering Practices and Applications
+            </h1>
+          </div>
+          <nav className="flex items-center gap-x-6 xl:gap-x-8">
             <Link
               to="/"
               className="text-academic-700 hover:text-primary-600 font-semibold text-base lg:text-lg transition-colors duration-200"
@@ -102,34 +116,10 @@ const Header = () => {
               </Link>
             )}
           </nav>
-          
-          {/* Mobile/Tablet Menu Button - Only shown on md and lg screens */}
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="lg:hidden inline-flex items-center px-4 py-2 border border-academic-200 rounded-full text-sm font-semibold text-academic-700 hover:bg-academic-50 hover:border-academic-300 transition-colors duration-200 shadow-sm"
-          >
-            <span className="mr-2">Menu</span>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
         </div>
 
         <div className="border flex items-center px-4 lg:px-6 xl:px-8">
-         
-          
-          {user ? (
+            {user ? (
             <button
               onClick={handleLogout}
               className="bg-black hover:bg-gray-700 text-white font-bold px-4 xl:px-6 py-2 xl:py-3 rounded"
