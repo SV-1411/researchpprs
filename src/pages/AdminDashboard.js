@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import PaperCard from '../components/PaperCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Alert from '../components/Alert';
 import { mockAPI } from '../data/mockData';
@@ -14,8 +13,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [issues, setIssues] = useState([]);
-  const [issuesLoading, setIssuesLoading] = useState(true);
-  const [paperIssueAssignments, setPaperIssueAssignments] = useState({});
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [issuePapersByIssueId, setIssuePapersByIssueId] = useState({});
   const [issuePapersLoadingId, setIssuePapersLoadingId] = useState(null);
@@ -65,7 +62,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     loadAdminData();
-  }, []);
+  }, [loadAdminData]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -101,10 +98,9 @@ const AdminDashboard = () => {
     loadNotificationsForAdmin();
   }, [user]);
 
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     try {
       setLoading(true);
-      setIssuesLoading(true);
 
       const allPapers = await mockAPI.getAllPapers();
 
@@ -161,9 +157,8 @@ const AdminDashboard = () => {
       console.error('Error loading admin ', error);
     } finally {
       setLoading(false);
-      setIssuesLoading(false);
     }
-  };
+  }, []);
 
   const handleAssignReviewer = async () => {
     if (!selectedPaper || !selectedReviewer) return;
