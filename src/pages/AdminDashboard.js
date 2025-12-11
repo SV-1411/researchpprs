@@ -145,8 +145,6 @@ const AdminDashboard = () => {
           assignmentsByPaperId[assignment.paperId] = assignment.issue;
         }
       });
-      setPaperIssueAssignments(assignmentsByPaperId);
-
       // Attach assignedIssue info to each paper for easier rendering
       const papersWithAssignments = (allPapers || []).map((paper) => ({
         ...paper,
