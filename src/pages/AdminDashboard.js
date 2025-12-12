@@ -60,44 +60,6 @@ const AdminDashboard = () => {
   const [adminSortBy, setAdminSortBy] = useState('recent');
   const [adminShowAllPapers, setAdminShowAllPapers] = useState(false);
 
-  useEffect(() => {
-    loadAdminData();
-  }, [loadAdminData]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Load admin notifications based on the logged-in user so we can show revised-manuscript badges
-  useEffect(() => {
-    const loadNotificationsForAdmin = async () => {
-      if (!user || !user.id) {
-        setAdminNotifications([]);
-        return;
-      }
-
-      try {
-        const notifResult = await mockAPI.getNotifications(user.id);
-        setAdminNotifications(Array.isArray(notifResult) ? notifResult : []);
-      } catch (err) {
-        console.error('Error loading admin notifications in AdminDashboard', err);
-        setAdminNotifications([]);
-      }
-    };
-
-    loadNotificationsForAdmin();
-  }, [user]);
-
   const loadAdminData = useCallback(async () => {
     try {
       setLoading(true);
@@ -156,7 +118,45 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+  }, [user]);
+
+  useEffect(() => {
+    loadAdminData();
+  }, [loadAdminData]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
+
+  // Load admin notifications based on the logged-in user so we can show revised-manuscript badges
+  useEffect(() => {
+    const loadNotificationsForAdmin = async () => {
+      if (!user || !user.id) {
+        setAdminNotifications([]);
+        return;
+      }
+
+      try {
+        const notifResult = await mockAPI.getNotifications(user.id);
+        setAdminNotifications(Array.isArray(notifResult) ? notifResult : []);
+      } catch (err) {
+        console.error('Error loading admin notifications in AdminDashboard', err);
+        setAdminNotifications([]);
+      }
+    };
+
+    loadNotificationsForAdmin();
+  }, [user]);
 
   const handleAssignReviewer = async () => {
     if (!selectedPaper || !selectedReviewer) return;

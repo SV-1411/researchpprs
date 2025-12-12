@@ -27,10 +27,6 @@ const ReviewerDashboard = () => {
   const [reviewerSortBy, setReviewerSortBy] = useState('title_az');
   const [showAllReviewerPapers, setShowAllReviewerPapers] = useState(false);
 
-  useEffect(() => {
-    loadReviewerData();
-  }, [loadReviewerData]);
-
   const loadReviewerData = useCallback(async () => {
     try {
       setLoading(true);
@@ -55,6 +51,10 @@ const ReviewerDashboard = () => {
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    loadReviewerData();
+  }, [loadReviewerData]);
 
   const handleStartReview = (paper) => {
     setSelectedPaper(paper);
