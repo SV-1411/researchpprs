@@ -80,12 +80,12 @@ const Login = () => {
     <div className="min-h-full bg-academic-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img
-            src={logo}
-            alt="Research Platform Logo"
-            className="w-16 h-16 object-contain rounded-2xl shadow-lg"
-          />
+        <div className="flex justify-center mb-2">
+           <img
+    src="/logo1 (2).png"
+    alt="Right Logo"
+    className="w-48 h-48 object-contain"
+  />
         </div>
 
         <h2 className="mt-2 text-center text-3xl font-extrabold text-academic-900 leading-tight">

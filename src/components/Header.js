@@ -50,7 +50,8 @@ const Header = () => {
         }
       `}</style>
 
-      <header className="bg-white shadow-lg h-28 hidden md:flex">
+      <header className="bg-white shadow-lg h-28 hidden md:flex justify-between items-center px-4">
+        {/* Left Logo */}
         <Link to="/" className="border flex-shrink-0 flex items-center justify-center px-4 lg:px-6 xl:px-8">
           <img 
             src={logo} 
@@ -60,7 +61,7 @@ const Header = () => {
         </Link>
         
         {/* IJEPA Full Name and Navigation Links - Centered */}
-        <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center flex-1">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-academic-900">
               International Journal of Engineering Practices and Applications
@@ -117,8 +118,16 @@ const Header = () => {
             )}
           </nav>
         </div>
+        <div className="border flex-shrink-0 flex items-center justify-center pl-1 pr-1">
+  <img
+    src="/logo1 (2).png"
+    alt="Right Logo"
+    className="w-48 h-48 object-contain"
+  />
+</div>
 
         <div className="border flex items-center px-4 lg:px-6 xl:px-8">
+          
             {user ? (
             <button
               onClick={handleLogout}
