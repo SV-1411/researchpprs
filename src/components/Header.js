@@ -61,7 +61,7 @@ const Header = () => {
         </Link>
         
         {/* IJEPA Full Name and Navigation Links - Centered */}
-        <div className="flex flex-col items-center justify-center flex-1">
+        <div className="flex flex-col items-center justify-center flex-1 ml-8">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-academic-900">
               International Journal of Engineering Practices and Applications
