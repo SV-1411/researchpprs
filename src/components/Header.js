@@ -16,7 +16,7 @@ const Header = () => {
   return (
     <>
       {/* Top Badge Area */}
-      <div className="bg-white border-b border-slate-200 py-1">
+      <div className="bg-white py-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
           <span className="text-sm font-medium text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-300">
             ISSN: XXXX-XXXX
@@ -118,7 +118,7 @@ const Header = () => {
             )}
           </nav>
         </div>
-        <div className="border flex-shrink-0 flex items-center justify-center pl-1 pr-1">
+        <div className="flex-shrink-0 flex items-center justify-center pl-2 pr-1">
   <img
     src="/logo1 (2).png"
     alt="Right Logo"
@@ -126,7 +126,7 @@ const Header = () => {
   />
 </div>
 
-        <div className="border flex items-center px-4 lg:px-6 xl:px-8">
+        <div className="flex items-center px-4 lg:px-6 xl:px-8">
           
             {user ? (
             <button
