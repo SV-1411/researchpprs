@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import Footer from '../components/Footer';
+import paperTemplatePdf from '../assets/Paper Template.pdf';
+import copyrightPdf from '../assets/Copyright.pdf';
 
 const AuthorGuidelines = () => {
   const componentRef = useRef();
@@ -129,7 +131,7 @@ const AuthorGuidelines = () => {
               <p className="text-slate-700 mb-4 text-justify">
                 Authors must prepare their manuscripts using the official IJEPA Paper Template to ensure uniformity.
               </p>
-              <a href="#" className="inline-flex items-center px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-lg transition-colors">
+              <a href={paperTemplatePdf} download="Paper Template.pdf" className="inline-flex items-center px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-lg transition-colors">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
@@ -147,7 +149,8 @@ const AuthorGuidelines = () => {
                 <li>Authors transfer publication rights to IJEPA while retaining intellectual property rights.</li>
               </ul>
               <a
-                href="#"
+                href={copyrightPdf}
+                download="Copyright.pdf"
                 className="inline-flex items-center px-5 py-2.5 bg-amber-800 hover:bg-amber-900 text-white font-medium rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
