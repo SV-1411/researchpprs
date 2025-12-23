@@ -2,7 +2,7 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://researchpprs.onrender.com';
 
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 15000) => {
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 30000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -196,7 +196,9 @@ export const mockAPI = {
 
       return data.papers;
     } catch (error) {
-      console.error('getPublishedPapers error', error);
+      if (error?.name !== 'AbortError') {
+        console.error('getPublishedPapers error', error);
+      }
       return [];
     }
   },
@@ -212,7 +214,9 @@ export const mockAPI = {
 
       return data.assignments;
     } catch (error) {
-      console.error('getIssueAssignments error', error);
+      if (error?.name !== 'AbortError') {
+        console.error('getIssueAssignments error', error);
+      }
       return [];
     }
   },
