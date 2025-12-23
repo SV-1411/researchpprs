@@ -276,7 +276,7 @@ const JournalIssues = () => {
           </div>
         </div>
       </div>
- 
+    
     </div>
   );
 };

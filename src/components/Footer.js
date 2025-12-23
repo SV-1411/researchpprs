@@ -12,7 +12,7 @@ const Footer = () => {
               <img
                 src={logo}
                 alt="IJEPA Logo"
-                className="h-10 w-auto"
+                className="h-[60px] w-auto"
               />
               <span className="text-2xl font-bold tracking-tight">IJEPA</span>
             </div>
@@ -58,9 +58,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-5 pb-2 border-b border-academic-700">Address</h3>
             <p className="text-academic-300 text-base leading-relaxed">
-              123 Engineering Lane,
-              Innovation City, 54321
-              Country
+             Address: Shop No 2, Snehankit Colony, Karve Nagar, Pune-411052, India
             </p>
           </div>
         </div>

@@ -14,15 +14,19 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AuthorDashboard from './pages/AuthorDashboard';
 import ReviewerDashboard from './pages/ReviewerDashboard';
-import AdminDashboard from './pages/AdminDashboard'; 
+import AdminDashboard from './pages/AdminDashboard';
 import ReviewPaper from './pages/ReviewPaper';
-import AuthorGuidelines from './pages/AuthorGuidelines';   
+import AuthorGuidelines from './pages/AuthorGuidelines';
 import CallForPapers from './pages/CallForPapers';
 import Indexing from './pages/Indexing';
 import JournalIssues from './pages/JournelIssue';
 import JoinEditorialTeam from './pages/joinusedito';
 import SubmitForm from './pages/SubmitForm';
 import ContactUs from './pages/ContactUs';
+import AboutUs from './pages/AboutUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import EditorialBoard from './pages/EditorialBoard';
 
 
 
@@ -46,23 +50,26 @@ function App() {
                 <Route path="/joinusedito" element={<JoinEditorialTeam />} />
                 <Route path="/submitform" element={<SubmitForm />} />
                 <Route path="/contact-us" element={<ContactUs />} />
-                <Route path="/contact-us" element={<ContactUs />} />
+                <Route path="/about-us" element={<AboutUs />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/editorial-board" element={<EditorialBoard />} />
               {/*  Routes */}
-              <Route 
-                path="/author-dashboard" 
+              <Route
+                path="/author-dashboard"
                 element={
                   <ProtectedRoute requiredRole="author">
                     <AuthorDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/reviewer-dashboard" 
+              <Route
+                path="/reviewer-dashboard"
                 element={
                   <ProtectedRoute requiredRole="reviewer">
                     <ReviewerDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
               <Route
                 path="/review/paper/:id"
@@ -72,15 +79,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/admin-dashboard" 
+              <Route
+                path="/admin-dashboard"
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
+
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
