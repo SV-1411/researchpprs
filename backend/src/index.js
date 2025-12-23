@@ -22,7 +22,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 
 // Middleware
 app.use(cors({
-  origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'https://researchpprs.vercel.app'],
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());
