@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockAPI } from '../data/mockData';
+import { supabase } from '../config/supabase';
 
 const AuthContext = createContext();
 
@@ -16,12 +17,55 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user data on app load
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    let isMounted = true;
+
+    const setUserFromSession = (session) => {
+      if (!isMounted) return;
+      if (session?.user) {
+        const mappedUser = {
+          id: session.user.id,
+          email: session.user.email,
+          name:
+            session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            session.user.email,
+          role: 'author'
+        };
+        setUser(mappedUser);
+        localStorage.setItem('user', JSON.stringify(mappedUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+    };
+
+    const init = async () => {
+      // Prefer Supabase session (Google OAuth redirects back with a session)
+      const { data, error } = await supabase.auth.getSession();
+      if (!error) {
+        setUserFromSession(data.session);
+      } else {
+        // Fallback to stored user data
+        const storedUser = localStorage.getItem('user');
+        if (storedUser && isMounted) {
+          setUser(JSON.parse(storedUser));
+        }
+      }
+      if (isMounted) setLoading(false);
+    };
+
+    init();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUserFromSession(session);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -59,11 +103,23 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    supabase.auth.signOut();
+  };
+
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) throw error;
   };
 
   const value = {
     user,
     login,
+    loginWithGoogle,
     register,
     logout,
     loading

@@ -20,7 +20,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -91,9 +91,16 @@ const Register = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Placeholder — integrate with your auth provider (Firebase, Auth0, etc.)
-    alert('Google Sign-In will be available soon.');
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      // Redirects to Google; Supabase will bring the user back to your site
+      await loginWithGoogle();
+    } catch (err) {
+      setError('Google sign-in failed.');
+      setLoading(false);
+    }
   };
 
   return (
