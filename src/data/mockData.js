@@ -1,6 +1,20 @@
 // Mock data for the research paper review platform
 
-const API_BASE_URL = 'https://researchpprs.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://researchpprs.onrender.com';
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 15000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+};
 
 export const mockUsers = [
   {
@@ -173,7 +187,7 @@ export const mockAPI = {
   // Papers
   getPublishedPapers: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/papers/published`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/papers/published`);
       const data = await response.json();
 
       if (!data.success || !Array.isArray(data.papers)) {
@@ -189,7 +203,7 @@ export const mockAPI = {
 
   getIssueAssignments: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/issues/assignments`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/issues/assignments`);
       const data = await response.json();
 
       if (!data.success || !Array.isArray(data.assignments)) {
