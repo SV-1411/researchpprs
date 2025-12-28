@@ -86,6 +86,24 @@ const Indexing = () => {
             </div>
           </section>
 
+          {/* Indexing in Progress */}
+          <section className="mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+              Indexing in Progress
+            </h2>
+            <p className="text-slate-700 mb-4 leading-relaxed text-justify">
+              The editorial team is in the process of applying for inclusion in:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-slate-700 text-justify">
+              <li>Scopus</li>
+              <li>Web of Science (ESCI)</li>
+              <li>DOAJ (Directory of Open Access Journals)</li>
+              <li>EBSCO</li>
+              <li>ProQuest</li>
+              <li>UGC-CARE (for Indian recognition)</li>
+            </ul>
+          </section>
+
           {/* Why Indexing Matters */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">

@@ -140,6 +140,7 @@ const AuthorDashboard = () => {
     }
   };
 
+  /*
   const loadRazorpay = () => {
     return new Promise((resolve) => {
       const script = document.createElement('script');
@@ -223,6 +224,12 @@ const AuthorDashboard = () => {
       console.error(error);
       setAlert({ type: 'error', message: 'Payment failed. Please try again.' });
     }
+  };
+  */
+
+  const handlePayment = async (_paperId) => {
+    const hostedPaymentLink = 'https://rzp.io/rzp/dOBF1Tdq';
+    window.open(hostedPaymentLink, '_blank', 'noopener,noreferrer');
   };
 
 
@@ -802,7 +809,7 @@ const AuthorDashboard = () => {
                       <div className="flex justify-between items-center">
                         <div>
                           <span className="text-sm text-academic-600 font-medium">
-                            Submission fee: <span className="text-lg font-bold text-primary-600">$150</span>
+                            Submission fee: <span className="text-lg font-bold text-primary-600">₹150</span>
                           </span>
                           <p className="text-xs text-academic-500 mt-1">Complete payment to initiate review</p>
                         </div>

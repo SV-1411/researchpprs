@@ -16,13 +16,11 @@ const JoinEditorialTeam = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
               Join Us as Associate Editor or Reviewer
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              The International Journal of Engineering Practices and Applications (IJEPA) invites academicians, researchers, and industry experts to join our editorial community.
-            </p>
           </div>
 
           {/* Intro Paragraph */}
           <p className="text-slate-700 mb-8 leading-relaxed text-justify">
+            The International Journal of Engineering Practices and Applications (IJEPA) invites academicians, researchers, and industry experts with strong academic and research credentials to join our editorial community as Associate Editors or Reviewers.
             We believe that the quality of a journal is a reflection of the dedication and expertise of its editorial board and reviewers. By joining IJEPA, you will have the opportunity to contribute to the advancement of engineering research worldwide while gaining valuable recognition for your service.
           </p>
 

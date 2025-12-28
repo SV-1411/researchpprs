@@ -5,6 +5,8 @@ const { supabase } = require('../supabaseClient');
 
 const router = express.Router();
 
+ const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
+
 // Initialize Razorpay
 // Note: Ensure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are set in your .env file
 const razorpay = new Razorpay({
@@ -100,5 +102,74 @@ router.post('/verify-payment', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+ // POST /api/payments/webhook
+ // Note: index.js registers express.raw() for this route so req.body is a Buffer.
+ router.post('/webhook', async (req, res) => {
+     try {
+         if (!WEBHOOK_SECRET) {
+             return res.status(500).json({ success: false, message: 'Webhook secret is not configured' });
+         }
+
+         const signature = req.headers['x-razorpay-signature'];
+         if (!signature) {
+             return res.status(400).json({ success: false, message: 'Missing x-razorpay-signature header' });
+         }
+
+         const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}));
+         const expectedSignature = crypto
+             .createHmac('sha256', WEBHOOK_SECRET)
+             .update(rawBody)
+             .digest('hex');
+
+         const signatureOk = crypto.timingSafeEqual(
+             Buffer.from(expectedSignature, 'utf8'),
+             Buffer.from(String(signature), 'utf8')
+         );
+
+         if (!signatureOk) {
+             return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
+         }
+
+         const payload = JSON.parse(rawBody.toString('utf8') || '{}');
+         const event = payload.event;
+
+         // For hosted payment links, you might only get payment.* events.
+         if (event !== 'payment.captured' && event !== 'payment.authorized') {
+             return res.json({ success: true, ignored: true });
+         }
+
+         const paymentEntity = payload?.payload?.payment?.entity;
+         const paperId = paymentEntity?.notes?.paperId
+             || payload?.payload?.order?.entity?.notes?.paperId
+             || payload?.payload?.payment_link?.entity?.notes?.paperId;
+
+         if (!paperId) {
+             // Still acknowledge to avoid repeated retries, but log server-side.
+             console.warn('[webhook] paperId not found in webhook notes. event=', event);
+             return res.json({ success: true, updated: false, reason: 'paperId missing' });
+         }
+
+         if (!supabase) {
+             console.warn('[webhook] Supabase not configured; cannot update payment status for paperId=', paperId);
+             return res.status(500).json({ success: false, message: 'Database not configured' });
+         }
+
+         const { error } = await supabase
+             .from('papers')
+             .update({ payment_status: 'paid' })
+             .eq('id', paperId);
+
+         if (error) {
+             console.error('[webhook] Error updating payment status in Supabase', error);
+             return res.status(500).json({ success: false, message: 'Failed to update payment status' });
+         }
+
+         return res.json({ success: true, updated: true, paperId });
+     } catch (error) {
+         console.error('[webhook] Error processing webhook:', error);
+         return res.status(500).json({ success: false, error: error.message });
+     }
+ });
 
 module.exports = router;

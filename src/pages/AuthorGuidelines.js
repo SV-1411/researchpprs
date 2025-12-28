@@ -52,8 +52,8 @@ const AuthorGuidelines = () => {
                     <li>Title Page (with author details)</li>
                     <li>Abstract (150–250 words) and Keywords (3–6)</li>
                     <li>Introduction</li>
+                    <li>Literature Survey</li>
                     <li>Methodology / Materials and Methods</li>
-                     <li>Literacy Survey</li>
                     <li>Results and Discussion</li>
                     <li>Conclusion</li>
                     <li>Acknowledgements (if any)</li>

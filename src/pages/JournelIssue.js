@@ -110,14 +110,23 @@ const JournalIssues = () => {
         </a>
       </p>
       {paper.pdfUrl && (
-        <a
-          href={paper.pdfUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-amber-700 hover:underline mt-1 inline-block"
-        >
-          View Full Paper
-        </a>
+        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+          <a
+            href={paper.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-amber-700 hover:underline inline-block"
+          >
+            View Full Paper
+          </a>
+          <a
+            href={paper.pdfUrl}
+            download
+            className="text-sm text-amber-700 hover:underline inline-block"
+          >
+            Download Paper
+          </a>
+        </div>
       )}
     </div>
   );
@@ -175,6 +184,7 @@ const JournalIssues = () => {
           </section>
 
           {/* Archives */}
+          {/* 
           <section className="mb-10">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
               Archives
@@ -227,6 +237,25 @@ const JournalIssues = () => {
                                     <p className="text-xs text-slate-600 mt-1">
                                       {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors}
                                     </p>
+                                    {paper.pdfUrl && (
+                                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                        <a
+                                          href={paper.pdfUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-amber-700 hover:underline"
+                                        >
+                                          View Full Paper
+                                        </a>
+                                        <a
+                                          href={paper.pdfUrl}
+                                          download
+                                          className="text-xs text-amber-700 hover:underline"
+                                        >
+                                          Download Paper
+                                        </a>
+                                      </div>
+                                    )}
                                   </div>
                                 ))
                               )}
@@ -240,6 +269,7 @@ const JournalIssues = () => {
               </div>
             )}
           </section>
+          */}
 
           {/* Publication Info */}
           <section className="mb-10">
@@ -268,7 +298,7 @@ const JournalIssues = () => {
               To publish in upcoming issues, please visit our Call for Papers page.
             </p>
             <a
-              href="/call-for-papers"
+              href="/callforpapers"
               className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-lg text-sm transition-colors"
             >
               Call for Papers

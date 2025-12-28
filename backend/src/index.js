@@ -25,7 +25,12 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(express.json());
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  if (req.originalUrl && req.originalUrl.startsWith('/api/payments/webhook')) return next();
+  return jsonParser(req, res, next);
+});
 app.use(morgan('dev'));
 
 // Simple health check

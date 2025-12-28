@@ -3,6 +3,7 @@ import PaperCard from '../components/PaperCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { mockAPI } from '../data/mockData';
 import hero from "../components/annie-spratt-5cFwQ-WMcJU-unsplash.jpg"
+import rclient from '../assets/rclient.png'
 
 // We will inject Roboto font for Landing page only
 const Landing = () => {
@@ -146,7 +147,7 @@ const Landing = () => {
         </div>
       </section>
        <section className="py-12">
-  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     {/* Main Content Box — matches all other pages */}
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 print:p-6">
 
@@ -164,9 +165,6 @@ const Landing = () => {
         {/* Main Content (2/3) */}
         <div className="lg:col-span-2 space-y-8">
           <section>
-            <h3 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Who We Are
-            </h3>
             <p className="text-slate-700 leading-relaxed text-justify mb-4">
               The <strong>International Journal of Engineering Practices and Applications (IJEPA)</strong> is a peer-reviewed, open-access journal dedicated to advancing research, innovation, and practical applications in the field of engineering. Our mission is to serve as a trusted platform for scholars, researchers, practitioners, and industry professionals to share knowledge, exchange ideas, and contribute to the progress of engineering science and technology.
             </p>
@@ -201,38 +199,15 @@ const Landing = () => {
           </section>
         </div>
 
-        {/* Sidebar Stats (1/3) */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Our Impact</h3>
-            <ul className="space-y-3 text-slate-700">
-              <li className="flex justify-between">
-                <span>Published Papers</span>
-                <span className="font-semibold">1,247</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Global Authors</span>
-                <span className="font-semibold">5,000+</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Countries</span>
-                <span className="font-semibold">87</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Impact Factor</span>
-                <span className="font-semibold">3.2</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Quick Stats</h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              <li>• Acceptance Rate: 23%</li>
-              <li>• Average Review Time: 4–6 weeks</li>
-              <li>• Publication Frequency: Monthly</li>
-              <li>• Indexed in 15+ databases</li>
-            </ul>
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+            <img
+              src={rclient}
+              alt="Client"
+              className="w-full h-auto rounded-lg"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
@@ -245,63 +220,7 @@ const Landing = () => {
 
       {/* Search and Filter Section */}
       
-      {/* Features Section */}
-      <section className="bg-primary-50 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-slate-900 mb-6">
-              Why Researchers Choose Build Softech
-            </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              We provide a comprehensive solution for academic research publication and peer review
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-slate-200">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-200 transition-all duration-300">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-primary-700">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 text-center">
-                Rigorous Peer Review
-              </h3>
-              <p className="text-slate-600 text-lg leading-relaxed text-center">
-                Your paper is reviewed by qualified experts assigned by our editorial team for quality and integrity.
-              </p>
-            </div>
-
-            <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-slate-200">
-              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-100 transition-all duration-300">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-primary-700">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 text-center">
-                Fast Turnaround
-              </h3>
-              <p className="text-slate-600 text-lg leading-relaxed text-center">
-                Streamlined workflows ensure your paper moves quickly from submission to publication.
-              </p>
-            </div>
-
-            <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-slate-200">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-200 transition-all duration-300">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-primary-700">
-                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 text-center">
-                Global Visibility
-              </h3>
-              <p className="text-slate-600 text-lg leading-relaxed text-center">
-                Get your research seen by academics and institutions worldwide through our indexed platform.
-              </p>
-            </div>
-          </div>
-        </div>
-              </section>
+      
 
       <div className="max-w-7xl mx-auto px-6">
       <section>
@@ -318,71 +237,28 @@ const Landing = () => {
 
 
     <div className="space-y-6">
-      <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Rigorous Peer Review Process</h4>
-        <p className="text-slate-700 mb-2">Our double-blind peer review system ensures academic integrity and quality. Each manuscript undergoes evaluation by at least two independent experts in the field, typically within 4-6 weeks. Our reviewers are experienced academics and industry professionals who provide constructive feedback to enhance manuscript quality.</p>
-      </div>
-
-      <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Open Access & Global Visibility</h4>
-        <p className="text-slate-700 mb-2">All published articles are immediately available under Creative Commons Attribution License, ensuring maximum visibility and impact. Our articles are indexed in major databases including Scopus, Web of Science, Google Scholar, and 15+ specialized engineering databases, reaching over 50,000 monthly readers worldwide.</p>
-      </div>
-
-      <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Publication Ethics & Integrity</h4>
-        <p className="text-slate-700 mb-2">IJEPA follows COPE (Committee on Publication Ethics) guidelines strictly. We use iThenticate plagiarism detection software with 98% accuracy to ensure originality. All published articles receive DOI assignment for permanent citation and archiving through CLOCKSS and Portico preservation services.</p>
-      </div>
-
-      <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Author Support Services</h4>
-        <ul className="space-y-2 text-slate-700">
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span>Free language editing services for non-native English speakers</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span>Dedicated author support team available 24/7 via email and chat</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span>Comprehensive article promotion through social media and academic networks</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span>Download certificates and publication letters for institutional requirements</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Publication Timeline & Process</h4>
-        <div className="bg-white rounded-lg p-4 border border-primary-200">
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li className="flex justify-between">
-              <span>Initial Screening:</span>
-              <span className="font-medium">2-3 days</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Peer Review Process:</span>
-              <span className="font-medium">4-6 weeks</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Revision Period:</span>
-              <span className="font-medium">2-4 weeks</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Final Decision:</span>
-              <span className="font-medium">1 week</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Online Publication:</span>
-              <span className="font-medium">Within 48 hours</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
+      <ul className="space-y-2 text-slate-700">
+        <li className="flex items-start">
+          <span className="text-green-600 mr-2">•</span>
+          <span>Peer-reviewed and high-quality publications</span>
+        </li>
+        <li className="flex items-start">
+          <span className="text-green-600 mr-2">•</span>
+          <span>Open access for global visibility and readership</span>
+        </li>
+        <li className="flex items-start">
+          <span className="text-green-600 mr-2">•</span>
+          <span>Rapid and transparent review process</span>
+        </li>
+        <li className="flex items-start">
+          <span className="text-green-600 mr-2">•</span>
+          <span>International editorial and reviewer panel</span>
+        </li>
+        <li className="flex items-start">
+          <span className="text-green-600 mr-2">•</span>
+          <span>Opportunities for academic recognition and collaboration</span>
+        </li>
+      </ul>
     </div>
   </div>
 
