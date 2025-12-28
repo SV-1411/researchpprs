@@ -74,7 +74,7 @@ function App() {
               <Route
                 path="/review/paper/:id"
                 element={
-                  <ProtectedRoute requiredRole="reviewer">
+                  <ProtectedRoute allowedRoles={["reviewer", "admin"]}>
                     <ReviewPaper />
                   </ProtectedRoute>
                 }

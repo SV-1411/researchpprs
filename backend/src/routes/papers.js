@@ -25,6 +25,7 @@ const mapPaperRow = (row, assignmentsByPaperId) => {
     publicationDate: row.publication_date,
     doi: row.doi,
     pdfUrl: row.pdf_url,
+    copyrightUrl: row.copyright_url || null,
     category: row.category,
     wordCount: row.word_count,
     citationCount: row.citation_count,

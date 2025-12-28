@@ -51,6 +51,15 @@ const AdminDashboard = () => {
     year: '',
   });
 
+  const [importantDates, setImportantDates] = useState({
+    'Manuscript Submission Deadline': '20 December 2024',
+    'Notification of Acceptance': 'To be announced',
+    'Final Camera-Ready Paper Due': 'To be announced',
+    'Publication Date': 'To be announced',
+  });
+  const [importantDatesLoading, setImportantDatesLoading] = useState(false);
+  const [importantDatesSaving, setImportantDatesSaving] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [reviewerSortBy, setReviewerSortBy] = useState('name_az');
@@ -123,6 +132,29 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadAdminData();
   }, [loadAdminData]);
+
+  useEffect(() => {
+    const loadImportantDates = async () => {
+      try {
+        setImportantDatesLoading(true);
+        const result = await mockAPI.getImportantDates();
+        if (result.success && result.dates && typeof result.dates === 'object') {
+          setImportantDates((prev) => ({
+            ...prev,
+            ...result.dates,
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load important dates', err);
+      } finally {
+        setImportantDatesLoading(false);
+      }
+    };
+
+    if (user && user.role === 'admin') {
+      loadImportantDates();
+    }
+  }, [user]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -309,6 +341,30 @@ const AdminDashboard = () => {
   const handleIssueFormChange = (e) => {
     const { name, value } = e.target;
     setIssueForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImportantDateChange = (label, value) => {
+    setImportantDates((prev) => ({
+      ...prev,
+      [label]: value,
+    }));
+  };
+
+  const handleSaveImportantDates = async () => {
+    try {
+      setImportantDatesSaving(true);
+      const result = await mockAPI.saveImportantDates(importantDates);
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Important Dates updated successfully.' });
+      } else {
+        setAlert({ type: 'error', message: result.error || 'Failed to save Important Dates.' });
+      }
+    } catch (err) {
+      console.error('Failed to save important dates', err);
+      setAlert({ type: 'error', message: 'Failed to save Important Dates.' });
+    } finally {
+      setImportantDatesSaving(false);
+    }
   };
 
   const handleAddIssue = async (e) => {
@@ -659,9 +715,58 @@ const AdminDashboard = () => {
               >
                 Under Review ({stats.under_review})
               </button>
+              <button
+                onClick={() => setActiveTab('important_dates')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'important_dates'
+                    ? 'border-amber-700 text-amber-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Important Dates
+              </button>
             </nav>
           </div>
         </div>
+
+        {activeTab === 'important_dates' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Important Dates</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Update the dates shown on the Call for Papers page.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveImportantDates}
+                disabled={importantDatesSaving}
+                className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+              >
+                {importantDatesSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+
+            {importantDatesLoading ? (
+              <div className="text-sm text-gray-600">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(importantDates).map(([label, value]) => (
+                  <div key={label} className="border border-gray-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => handleImportantDateChange(label, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Papers List */}
         {activeTab === 'submissions' && (
@@ -710,6 +815,18 @@ const AdminDashboard = () => {
                     </span>
                   </div>
 
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        paper.paymentStatus === 'paid'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {paper.paymentStatus === 'paid' ? 'PAYMENT: PAID' : 'PAYMENT: PENDING'}
+                    </span>
+                  </div>
+
                   <div className="mb-4 space-y-2 text-sm">
                     <div><span className="font-medium text-gray-700 w-20 inline-block">Authors:</span> {paper.authors.join(', ')}</div>
                     <div><span className="font-medium text-gray-700 w-20 inline-block">Category:</span> {paper.category}</div>
@@ -718,6 +835,37 @@ const AdminDashboard = () => {
                   </div>
 
                   <p className="text-gray-700 text-sm mb-5 line-clamp-3">{paper.abstract}</p>
+
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {paper.pdfUrl && (
+                      <>
+                        <a
+                          href={`/review/paper/${paper.id}`}
+                          className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg"
+                        >
+                          View Paper
+                        </a>
+                        <a
+                          href={paper.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg"
+                        >
+                          Download Paper
+                        </a>
+                      </>
+                    )}
+                    {paper.copyrightUrl && (
+                      <a
+                        href={paper.copyrightUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg"
+                      >
+                        Download Copyright
+                      </a>
+                    )}
+                  </div>
 
                   {paper.status === 'published' && issues.length > 0 && (
                     <div className="pt-4 border-t border-gray-200">

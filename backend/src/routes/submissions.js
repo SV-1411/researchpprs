@@ -120,6 +120,22 @@ router.post(
         return res.status(500).json({ success: false, error: 'Failed to save submission.' });
       }
 
+      // Best-effort: persist copyright URL on the paper record (requires papers.copyright_url column)
+      try {
+        if (data?.id && copyrightUrl) {
+          const { error: copyrightUpdateError } = await supabase
+            .from('papers')
+            .update({ copyright_url: copyrightUrl })
+            .eq('id', data.id);
+
+          if (copyrightUpdateError) {
+            console.warn('Unable to persist copyright_url on paper record', copyrightUpdateError);
+          }
+        }
+      } catch (copyrightPersistErr) {
+        console.warn('Unexpected error persisting copyright_url', copyrightPersistErr);
+      }
+
       return res.json({
         success: true,
         paper: {

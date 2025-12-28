@@ -577,6 +577,42 @@ export const mockAPI = {
       console.error('getRazorpayKey error', error);
       return null;
     }
+  },
+
+  getImportantDates: async () => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/settings/important-dates`);
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to load important dates.' };
+      }
+
+      return { success: true, dates: data.dates || null };
+    } catch (error) {
+      console.error('getImportantDates error', error);
+      return { success: false, error: 'Failed to load important dates.' };
+    }
+  },
+
+  saveImportantDates: async (dates) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/important-dates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dates }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to save important dates.' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('saveImportantDates error', error);
+      return { success: false, error: 'Failed to save important dates.' };
+    }
   }
 };
 
