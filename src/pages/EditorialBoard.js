@@ -13,7 +13,7 @@ const EditorialBoard = () => {
       </p>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Editor in Chief</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Editor-in-Chief</h2>
         <div className="bg-slate-50 p-5 rounded-lg shadow-sm">
           <p className="font-bold text-lg">1. Dr. Navnath D. Kale</p>
           <p className="text-slate-700">Senior Assistant Professor, Dept. of Computer Engineering</p>
