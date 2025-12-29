@@ -15,7 +15,7 @@ const EditorialBoard = () => {
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Editor-in-Chief</h2>
         <div className="bg-slate-50 p-5 rounded-lg shadow-sm">
-          <p className="font-bold text-lg">1. Dr. Navnath D. Kale</p>
+          <p className="font-bold text-lg">Dr. Navnath D. Kale</p>
           <p className="text-slate-700">Senior Assistant Professor, Dept. of Computer Engineering</p>
           <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
           <p className="mt-2 text-slate-600">Email: <a href="mailto:editor@ijepa.org" className="text-amber-600 hover:underline">editor@ijepa.org</a></p>
@@ -26,42 +26,42 @@ const EditorialBoard = () => {
         <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Associate Editors</h2>
         <div className="space-y-4">
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">2. Dr. Yogesh Gurav</p>
+            <p className="font-medium">Dr. Yogesh Gurav</p>
             <p className="text-slate-700">Dean Academics & Research,</p>
             <p className="text-slate-700">Dr. D. Y. Patil Technical Campus, Talegaon, Pune, India</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:ybgurav1977@gmail.com" className="text-amber-600 hover:underline">ybgurav1977@gmail.com</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">3. Dr. Sandeep Kadam</p>
+            <p className="font-medium">Dr. Sandeep Kadam</p>
             <p className="text-slate-700">Principal, Keystone School of Engineering, Pune, India</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:sandeep.kadam@gmail.com" className="text-amber-600 hover:underline">sandeep.kadam@gmail.com</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">4. Dr. M. Venkateshwara Rao</p>
+            <p className="font-medium">Dr. M. Venkateshwara Rao</p>
             <p className="text-slate-700">Professor, Dept. of Computer Science and Engineering,</p>
             <p className="text-slate-700">Vignana Bharathi Institute of Technology, Ghatkesar, Hyderabad, India.</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:venkateshwara.rao@vbithyd.ac.in" className="text-amber-600 hover:underline">venkateshwara.rao@vbithyd.ac.in</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">5. Dr. Pramod Ganjewar</p>
+            <p className="font-medium">Dr. Pramod Ganjewar</p>
             <p className="text-slate-700">Head, Dept of Computer Engineering,</p>
             <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:pdganjewar@mitaoe.ac.in" className="text-amber-600 hover:underline">pdganjewar@mitaoe.ac.in</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">6. Dr. Manish Giri</p>
+            <p className="font-medium">Dr. Manish Giri</p>
             <p className="text-slate-700">Head, Dept. of Computer Engineering (Software Engineering)</p>
             <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:mbgiri@mitaoe.ac.in" className="text-amber-600 hover:underline">mbgiri@mitaoe.ac.in</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">7. Dr. G. Arun</p>
+            <p className="font-medium">Dr. G. Arun</p>
             <p className="text-slate-700">Associate Professor, Dept. of Computer Science and Engineering,</p>
             <p className="text-slate-700">Vignana Bharathi Institute of Technology, Ghatkesar, Hyderabad, India.</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:g.arun@vbithyd.ac.in" className="text-amber-600 hover:underline">g.arun@vbithyd.ac.in</a></p>
           </div>
           <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">8. Dr. Royyuru Srikanth</p>
+            <p className="font-medium">Dr. Royyuru Srikanth</p>
             <p className="text-slate-700">Assistant Professor, Dept. of Computer Science and Engineering</p>
             <p className="text-slate-700">Vardhaman College of Engineering, Hyderabad, India</p>
             <p className="text-slate-600 text-sm">Email: <a href="mailto:srikanth.r@gmail.com" className="text-amber-600 hover:underline">srikanth.r@gmail.com</a></p>
