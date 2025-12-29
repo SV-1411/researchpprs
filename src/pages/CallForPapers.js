@@ -112,21 +112,7 @@ const CallForPapers = () => {
           </section>
 
           {/* Literature Review */}
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Literature Review (Point Form)
-            </h2>
-            <ul className="list-disc pl-6 space-y-2 text-slate-700 text-justify">
-              <li>Previous studies highlight that digital research platforms significantly improve accessibility and information retrieval for researchers.</li>
-              <li>Literature suggests that user-friendly website interfaces enhance engagement, reduce confusion, and support effective learning.</li>
-              <li>Researchers emphasize the importance of structured content organization to help users navigate academic material efficiently.</li>
-              <li>Studies indicate that open-access repositories and online archives promote transparency and broaden participation in research.</li>
-              <li>Prior work identifies common challenges such as information overload, credibility issues, and gaps in digital literacy.</li>
-              <li>Scholars recommend using intelligent search systems and reliable citation tools to overcome these challenges.</li>
-              <li>Existing research shows a growing trend toward digital platforms being essential tools for modern academic collaboration.</li>
-              <li>Literature also highlights the need for secure, efficient, and accessible research websites to support scholarly communication.</li>
-            </ul>
-          </section>
+          
 
           {/* Important Dates */}
           <section className="mb-8">
