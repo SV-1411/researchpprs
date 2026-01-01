@@ -113,13 +113,35 @@ const JournalIssues = () => {
   };
   */
 
+  const getAuthorsText = (authors) => {
+    if (Array.isArray(authors)) {
+      const names = authors
+        .map((a) => {
+          if (typeof a === 'string') return a.trim();
+          if (a && typeof a === 'object') return String(a.fullName || a.name || '').trim();
+          return '';
+        })
+        .filter(Boolean);
+      return names.length ? names.join(', ') : 'N/A';
+    }
+
+    const raw = String(authors || '').trim();
+    if (!raw) return 'N/A';
+
+    const parts = raw
+      .split(/[,;\n]/g)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    return parts.length ? parts.join(', ') : 'N/A';
+  };
+
   const PaperCard = ({ paper }) => (
     <div className="border-l-4 border-amber-600 pl-4 py-2 mb-4 last:mb-0">
       <p className="text-sm text-slate-700">
         <span className="font-semibold text-slate-900">Title:</span> {paper.title},
       </p>
       <p className="text-sm text-slate-700 mt-1">
-        <span className="font-semibold text-slate-900">Author name:</span> {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors}
+        <span className="font-semibold text-slate-900">Authors:</span> {getAuthorsText(paper.authors)}
       </p>
       {/*
       <p className="text-sm text-slate-700 mt-1">
