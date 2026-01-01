@@ -27,6 +27,7 @@ import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import EditorialBoard from './pages/EditorialBoard';
+import PaperRedirect from './pages/PaperRedirect';
 
 
 
@@ -45,6 +46,7 @@ function App() {
               <Route path="/papers" element={<BrowsePapers />} />
               <Route path="/author-guidelines" element={<AuthorGuidelines />} />
               <Route path="/indexing" element={<Indexing />} />
+              <Route path="/p/:id" element={<PaperRedirect />} />
                 <Route path="/callforpapers" element={<CallForPapers />} />
                 <Route path="/journal-issues" element={<JournalIssues />} />
                 <Route path="/joinusedito" element={<JoinEditorialTeam />} />

@@ -141,14 +141,14 @@ const JournalIssues = () => {
 
       <p className="text-sm text-slate-700 mt-1">
         <span className="font-semibold text-slate-900">Paper link:</span>{' '}
-        {paper.pdfUrl ? (
+        {paper.id ? (
           <a
-            href={paper.pdfUrl}
+            href={`/p/${paper.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-amber-700 hover:underline"
           >
-            {paper.pdfUrl}
+            {`/p/${paper.id}`}
           </a>
         ) : (
           <span className="text-slate-600">N/A</span>
