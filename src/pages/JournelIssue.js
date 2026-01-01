@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 import Footer from '../components/Footer';
 import { mockAPI } from '../data/mockData';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const JournalIssues = () => {
   const [issues, setIssues] = useState([]);
@@ -10,6 +13,10 @@ const JournalIssues = () => {
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [archiveIssuePapers, setArchiveIssuePapers] = useState({});
   const [archivePapersLoadingId, setArchivePapersLoadingId] = useState(null);
+  const [viewerPaper, setViewerPaper] = useState(null);
+  const [viewerNumPages, setViewerNumPages] = useState(null);
+  const [viewerPageNumber, setViewerPageNumber] = useState(1);
+  const [viewerZoom, setViewerZoom] = useState(1);
 
   useEffect(() => {
     const loadIssues = async () => {
@@ -25,6 +32,46 @@ const JournalIssues = () => {
     };
     loadIssues();
   }, []);
+
+  const handleOpenViewer = (paper) => {
+    if (!paper || !paper.pdfUrl) return;
+    setViewerPaper(paper);
+    setViewerNumPages(null);
+    setViewerPageNumber(1);
+    setViewerZoom(1);
+  };
+
+  const handleCloseViewer = () => {
+    setViewerPaper(null);
+    setViewerNumPages(null);
+    setViewerPageNumber(1);
+    setViewerZoom(1);
+  };
+
+  const handleViewerDocumentLoadSuccess = ({ numPages }) => {
+    setViewerNumPages(numPages);
+    setViewerPageNumber(1);
+  };
+
+  const handleViewerPrevPage = () => {
+    setViewerPageNumber((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleViewerNextPage = () => {
+    setViewerPageNumber((prev) => (viewerNumPages ? Math.min(prev + 1, viewerNumPages) : prev + 1));
+  };
+
+  const handleViewerZoomIn = () => {
+    setViewerZoom((prev) => Math.min(prev + 0.25, 2));
+  };
+
+  const handleViewerZoomOut = () => {
+    setViewerZoom((prev) => Math.max(prev - 0.25, 0.5));
+  };
+
+  const handleViewerResetZoom = () => {
+    setViewerZoom(1);
+  };
 
   const currentIssue = issues.find(issue => issue.isCurrent);
   const archives = issues.filter(issue => !issue.isCurrent);
@@ -139,14 +186,13 @@ const JournalIssues = () => {
       </p>
       {paper.pdfUrl && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-          <a
-            href={paper.pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => handleOpenViewer(paper)}
             className="text-sm text-amber-700 hover:underline inline-block"
           >
             View Full Paper
-          </a>
+          </button>
           <a
             href={paper.pdfUrl}
             download
@@ -334,7 +380,105 @@ const JournalIssues = () => {
           </div>
         </div>
       </div>
- 
+
+      {viewerPaper && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-slate-900 truncate">{viewerPaper.title}</h2>
+                <p className="text-xs text-slate-600 truncate">{getAuthorsText(viewerPaper.authors)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseViewer}
+                className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full p-2"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="bg-slate-900" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+              <div className="flex flex-col items-center py-6">
+                <Document
+                  file={viewerPaper.pdfUrl}
+                  onLoadSuccess={handleViewerDocumentLoadSuccess}
+                  loading={<div className="text-slate-100 text-sm">Loading PDF...</div>}
+                  error={<div className="text-red-200 text-sm">Failed to load PDF.</div>}
+                >
+                  <Page pageNumber={viewerPageNumber} height={650} scale={viewerZoom} />
+                </Document>
+
+                {viewerNumPages && (
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-100 justify-center">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleViewerZoomOut}
+                        className="px-2 py-1 rounded bg-slate-800 disabled:opacity-50"
+                        disabled={viewerZoom <= 0.5}
+                      >
+                        -
+                      </button>
+                      <span>{Math.round(viewerZoom * 100)}%</span>
+                      <button
+                        type="button"
+                        onClick={handleViewerZoomIn}
+                        className="px-2 py-1 rounded bg-slate-800 disabled:opacity-50"
+                        disabled={viewerZoom >= 2}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleViewerResetZoom}
+                        className="px-3 py-1 rounded bg-slate-800/70 hover:bg-slate-800"
+                      >
+                        Reset
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleViewerPrevPage}
+                        disabled={viewerPageNumber <= 1}
+                        className="px-3 py-1 rounded bg-slate-800 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span>
+                        Page {viewerPageNumber} of {viewerNumPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleViewerNextPage}
+                        disabled={viewerNumPages && viewerPageNumber >= viewerNumPages}
+                        className="px-3 py-1 rounded bg-slate-800 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
+              <a
+                href={viewerPaper.pdfUrl}
+                download
+                className="text-sm text-amber-700 hover:underline"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
