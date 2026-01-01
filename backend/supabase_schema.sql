@@ -82,6 +82,23 @@ create index if not exists papers_category_idx on public.papers (category);
 create index if not exists papers_main_author_idx on public.papers (main_author_id);
 
 -- =========================
+-- PAPER AUTHORS (OPTIONAL)
+-- =========================
+
+create table if not exists public.paper_authors (
+  id               bigserial primary key,
+  paper_id         bigint not null references public.papers(id) on delete cascade,
+  full_name        text not null,
+  affiliation      text,
+  email            text,
+  is_corresponding boolean not null default false,
+  created_at       timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists paper_authors_paper_idx on public.paper_authors (paper_id);
+create index if not exists paper_authors_email_idx on public.paper_authors (email);
+
+-- =========================
 -- REVIEW ASSIGNMENTS
 -- =========================
 

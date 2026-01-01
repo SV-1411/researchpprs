@@ -63,6 +63,7 @@ router.post(
         paperTitle,
         keywords,
         comments,
+        coAuthors,
         userId,
       } = req.body || {};
 
@@ -89,9 +90,32 @@ router.post(
             .filter(Boolean)
         : [];
 
+      let parsedCoAuthors = [];
+      if (coAuthors) {
+        try {
+          const raw = typeof coAuthors === 'string' ? JSON.parse(coAuthors) : coAuthors;
+          if (Array.isArray(raw)) {
+            parsedCoAuthors = raw
+              .map((a) => ({
+                fullName: String(a?.fullName || '').trim(),
+                affiliation: String(a?.affiliation || '').trim(),
+                email: String(a?.email || '').trim(),
+              }))
+              .filter((a) => a.fullName || a.affiliation || a.email);
+          }
+        } catch (_e) {
+          parsedCoAuthors = [];
+        }
+      }
+
+      const allAuthorNames = [
+        String(fullName || '').trim(),
+        ...parsedCoAuthors.map((a) => a.fullName).filter(Boolean),
+      ].filter(Boolean);
+
       const insertPayload = {
         title: paperTitle,
-        authors: [fullName],
+        authors: allAuthorNames,
         abstract: comments || null,
         keywords: keywordArray,
         category: null,
@@ -118,6 +142,42 @@ router.post(
       if (error) {
         console.error('Error inserting paper from submission', error);
         return res.status(500).json({ success: false, error: 'Failed to save submission.' });
+      }
+
+      // Best-effort: persist detailed author info in a separate table if available.
+      // This enables future “email all authors on publish” workflows.
+      try {
+        const paperId = data?.id;
+        if (paperId) {
+          const authorRows = [
+            {
+              paper_id: paperId,
+              full_name: String(fullName || '').trim(),
+              affiliation: String(affiliation || '').trim(),
+              email: String(email || '').trim(),
+              is_corresponding: true,
+            },
+            ...parsedCoAuthors.map((a) => ({
+              paper_id: paperId,
+              full_name: a.fullName,
+              affiliation: a.affiliation,
+              email: a.email,
+              is_corresponding: false,
+            })),
+          ].filter((row) => row.full_name);
+
+          if (authorRows.length > 0) {
+            const { error: authorInsertError } = await supabase
+              .from('paper_authors')
+              .insert(authorRows);
+
+            if (authorInsertError) {
+              console.warn('Unable to persist paper_authors rows', authorInsertError);
+            }
+          }
+        }
+      } catch (authorPersistErr) {
+        console.warn('Unexpected error persisting paper_authors rows', authorPersistErr);
       }
 
       // Best-effort: persist copyright URL on the paper record (requires papers.copyright_url column)

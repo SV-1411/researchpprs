@@ -9,6 +9,7 @@ const SubmitForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [coAuthors, setCoAuthors] = useState([]);
   
   const [formData, setFormData] = useState({
     fullName: user?.name || '',
@@ -53,6 +54,32 @@ const SubmitForm = () => {
     }
   };
 
+  const handleAddCoAuthor = () => {
+    setCoAuthors(prev => ([
+      ...prev,
+      { fullName: '', affiliation: '', email: '' }
+    ]));
+  };
+
+  const handleRemoveCoAuthor = (index) => {
+    setCoAuthors(prev => prev.filter((_, i) => i !== index));
+    setErrors(prev => {
+      const next = { ...prev };
+      delete next[`coAuthors.${index}.fullName`];
+      delete next[`coAuthors.${index}.affiliation`];
+      delete next[`coAuthors.${index}.email`];
+      return next;
+    });
+  };
+
+  const handleCoAuthorChange = (index, field, value) => {
+    setCoAuthors(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+    const key = `coAuthors.${index}.${field}`;
+    if (errors[key]) {
+      setErrors(prev => ({ ...prev, [key]: '' }));
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
     
@@ -66,6 +93,24 @@ const SubmitForm = () => {
     if (!formData.paperTitle.trim()) newErrors.paperTitle = 'Paper title is required';
     if (!formData.manuscript) newErrors.manuscript = 'Manuscript file is required';
     if (!formData.copyrightForm) newErrors.copyrightForm = 'Copyright form is required';
+
+    const normalizedCoAuthors = (coAuthors || [])
+      .map((a) => ({
+        fullName: String(a?.fullName || '').trim(),
+        affiliation: String(a?.affiliation || '').trim(),
+        email: String(a?.email || '').trim(),
+      }))
+      .filter((a) => a.fullName || a.affiliation || a.email);
+
+    normalizedCoAuthors.forEach((a, index) => {
+      if (!a.fullName) newErrors[`coAuthors.${index}.fullName`] = 'Co-author name is required';
+      if (!a.affiliation) newErrors[`coAuthors.${index}.affiliation`] = 'Co-author affiliation is required';
+      if (!a.email) {
+        newErrors[`coAuthors.${index}.email`] = 'Co-author email is required';
+      } else if (!/\S+@\S+\.\S+/.test(a.email)) {
+        newErrors[`coAuthors.${index}.email`] = 'Co-author email is invalid';
+      }
+    });
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -87,6 +132,16 @@ const SubmitForm = () => {
       form.append('paperTitle', formData.paperTitle);
       form.append('keywords', formData.keywords || '');
       form.append('comments', formData.comments || '');
+
+      const normalizedCoAuthors = (coAuthors || [])
+        .map((a) => ({
+          fullName: String(a?.fullName || '').trim(),
+          affiliation: String(a?.affiliation || '').trim(),
+          email: String(a?.email || '').trim(),
+        }))
+        .filter((a) => a.fullName || a.affiliation || a.email);
+
+      form.append('coAuthors', JSON.stringify(normalizedCoAuthors));
       if (user?.id) {
         form.append('userId', String(user.id));
       }
@@ -253,6 +308,96 @@ const SubmitForm = () => {
                     />
                     {errors.affiliation && <p className="mt-1 text-sm text-red-600">{errors.affiliation}</p>}
                   </div>
+                </div>
+
+                <div className="mt-8">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900">Co-authors (Optional)</h3>
+                    <button
+                      type="button"
+                      onClick={handleAddCoAuthor}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Add Co-author
+                    </button>
+                  </div>
+
+                  {coAuthors.length === 0 ? (
+                    <p className="text-sm text-slate-600">Add co-authors if your paper has multiple authors.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {coAuthors.map((author, index) => (
+                        <div key={index} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                          <div className="flex items-center justify-between gap-4 mb-4">
+                            <p className="text-sm font-semibold text-slate-900">Co-author {index + 1}</p>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCoAuthor(index)}
+                              className="text-sm text-red-600 hover:text-red-700 font-medium"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Full Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={author.fullName}
+                                onChange={(e) => handleCoAuthorChange(index, 'fullName', e.target.value)}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                                  errors[`coAuthors.${index}.fullName`] ? 'border-red-500 bg-red-50' : 'border-slate-300'
+                                }`}
+                                placeholder="Co-author name"
+                              />
+                              {errors[`coAuthors.${index}.fullName`] && (
+                                <p className="mt-1 text-sm text-red-600">{errors[`coAuthors.${index}.fullName`]}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Affiliation <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={author.affiliation}
+                                onChange={(e) => handleCoAuthorChange(index, 'affiliation', e.target.value)}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                                  errors[`coAuthors.${index}.affiliation`] ? 'border-red-500 bg-red-50' : 'border-slate-300'
+                                }`}
+                                placeholder="Institution"
+                              />
+                              {errors[`coAuthors.${index}.affiliation`] && (
+                                <p className="mt-1 text-sm text-red-600">{errors[`coAuthors.${index}.affiliation`]}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Email <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="email"
+                                value={author.email}
+                                onChange={(e) => handleCoAuthorChange(index, 'email', e.target.value)}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                                  errors[`coAuthors.${index}.email`] ? 'border-red-500 bg-red-50' : 'border-slate-300'
+                                }`}
+                                placeholder="name@email.com"
+                              />
+                              {errors[`coAuthors.${index}.email`] && (
+                                <p className="mt-1 text-sm text-red-600">{errors[`coAuthors.${index}.email`]}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
