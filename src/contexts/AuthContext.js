@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockAPI } from '../data/mockData';
-import { supabase } from '../config/supabase';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const AuthContext = createContext();
 
@@ -40,17 +40,27 @@ export const AuthProvider = ({ children }) => {
     };
 
     const init = async () => {
-      // Prefer Supabase session (Google OAuth redirects back with a session)
-      const { data, error } = await supabase.auth.getSession();
-      if (!error) {
-        setUserFromSession(data.session);
-      } else {
-        // Fallback to stored user data
-        const storedUser = localStorage.getItem('user');
+      const storedUser = localStorage.getItem('user');
+
+      if (!isSupabaseConfigured) {
         if (storedUser && isMounted) {
           setUser(JSON.parse(storedUser));
         }
+        if (isMounted) setLoading(false);
+        return;
       }
+
+      const { data, error } = await supabase.auth.getSession();
+
+      if (!error && data?.session) {
+        setUserFromSession(data.session);
+      } else if (storedUser && isMounted) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+
       if (isMounted) setLoading(false);
     };
 
@@ -58,7 +68,17 @@ export const AuthProvider = ({ children }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUserFromSession(session);
+        // If you're logged in via backend mockAPI (stored in localStorage), Supabase can still
+        // emit a null session on refresh; don't wipe the local session in that case.
+        if (session?.user) {
+          setUserFromSession(session);
+          return;
+        }
+
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+          setUserFromSession(session);
+        }
       }
     );
 
@@ -103,7 +123,9 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      supabase.auth.signOut();
+    }
   };
 
   const loginWithGoogle = async () => {

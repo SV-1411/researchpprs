@@ -101,7 +101,7 @@ export const mockPapers = [
     submissionDate: '2024-03-20',
     category: 'Biomedical Engineering',
     wordCount: 9500,
-    submissionFee: 150,
+    submissionFee: 730,
     paymentStatus: 'pending'
   }
 ];

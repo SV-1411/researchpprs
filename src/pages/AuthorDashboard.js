@@ -112,7 +112,7 @@ const AuthorDashboard = () => {
         keywords: uploadFormData.keywords.split(',').map(keyword => keyword.trim()),
         category: uploadFormData.category,
         wordCount: parseInt(uploadFormData.wordCount),
-        submissionFee: 150,
+        submissionFee: 730,
         paymentStatus: 'pending'
       };
 
@@ -654,7 +654,7 @@ const AuthorDashboard = () => {
                       <div className="flex-shrink-0">
                         <svg className="h-6 w-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                          <p>Submission fee: <strong className="text-lg text-amber-700">₹150</strong></p>
+                          <p>Submission fee: <strong className="text-lg text-amber-700">₹730</strong></p>
                         </svg>
                       </div>
                       <div className="ml-3">
