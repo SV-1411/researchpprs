@@ -92,7 +92,6 @@ const JournalIssues = () => {
     }
   };
 
-  // Simplified paper card (text-only, no heavy styling)
   const PaperCard = ({ paper }) => (
     <div className="border-l-4 border-amber-600 pl-4 py-2 mb-4 last:mb-0">
       <p className="text-sm text-slate-700">
@@ -102,15 +101,19 @@ const JournalIssues = () => {
         <span className="font-semibold text-slate-900">Author name:</span> {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors}
       </p>
       <p className="text-sm text-slate-700 mt-1">
-        <span className="font-semibold text-slate-900">DOI:</span>{' '}
-        <a
-          href={`https://doi.org/${paper.doi}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-amber-700 hover:underline"
-        >
-          {paper.doi}
-        </a>
+        <span className="font-semibold text-slate-900">Paper link:</span>{' '}
+        {paper.pdfUrl ? (
+          <a
+            href={paper.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-amber-700 hover:underline"
+          >
+            {paper.pdfUrl}
+          </a>
+        ) : (
+          <span className="text-slate-600">N/A</span>
+        )}
       </p>
       {paper.pdfUrl && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
