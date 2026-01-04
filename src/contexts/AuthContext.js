@@ -16,6 +16,33 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const safeStorageGet = (key) => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return null;
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const safeStorageSet = (key, value) => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      return;
+    }
+  };
+
+  const safeStorageRemove = (key) => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      return;
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -32,15 +59,15 @@ export const AuthProvider = ({ children }) => {
           role: 'author'
         };
         setUser(mappedUser);
-        localStorage.setItem('user', JSON.stringify(mappedUser));
+        safeStorageSet('user', JSON.stringify(mappedUser));
       } else {
         setUser(null);
-        localStorage.removeItem('user');
+        safeStorageRemove('user');
       }
     };
 
     const init = async () => {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = safeStorageGet('user');
 
       if (!isSupabaseConfigured) {
         if (storedUser && isMounted) {
@@ -58,7 +85,7 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(storedUser));
       } else {
         setUser(null);
-        localStorage.removeItem('user');
+        safeStorageRemove('user');
       }
 
       if (isMounted) setLoading(false);
@@ -75,7 +102,7 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        const storedUser = localStorage.getItem('user');
+        const storedUser = safeStorageGet('user');
         if (!storedUser) {
           setUserFromSession(session);
         }
@@ -94,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       const response = await mockAPI.login(email, password);
       if (response.success) {
         setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        safeStorageSet('user', JSON.stringify(response.user));
         return { success: true };
       } else {
         return { success: false, error: response.error };
@@ -110,7 +137,7 @@ export const AuthProvider = ({ children }) => {
       const response = await mockAPI.register(userData);
       if (response.success) {
         setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        safeStorageSet('user', JSON.stringify(response.user));
         return { success: true };
       } else {
         return { success: false, error: response.error };
@@ -122,7 +149,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    safeStorageRemove('user');
     if (isSupabaseConfigured) {
       supabase.auth.signOut();
     }
