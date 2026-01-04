@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import Footer from '../components/Footer';
 import { mockAPI } from '../data/mockData';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const JournalIssues = () => {
   const [issues, setIssues] = useState([]);
@@ -13,10 +10,7 @@ const JournalIssues = () => {
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [archiveIssuePapers, setArchiveIssuePapers] = useState({});
   const [archivePapersLoadingId, setArchivePapersLoadingId] = useState(null);
-  const [viewerPaper, setViewerPaper] = useState(null);
-  const [viewerNumPages, setViewerNumPages] = useState(null);
-  const [viewerPageNumber, setViewerPageNumber] = useState(1);
-  const [viewerZoom, setViewerZoom] = useState(1);
+  const [expandedVolumeKey, setExpandedVolumeKey] = useState(null);
 
   useEffect(() => {
     const loadIssues = async () => {
@@ -33,46 +27,6 @@ const JournalIssues = () => {
 
     loadIssues();
   }, []);
-
-  const handleOpenViewer = (paper) => {
-    if (!paper || !paper.pdfUrl) return;
-    setViewerPaper(paper);
-    setViewerNumPages(null);
-    setViewerPageNumber(1);
-    setViewerZoom(1);
-  };
-
-  const handleCloseViewer = () => {
-    setViewerPaper(null);
-    setViewerNumPages(null);
-    setViewerPageNumber(1);
-    setViewerZoom(1);
-  };
-
-  const handleViewerDocumentLoadSuccess = ({ numPages }) => {
-    setViewerNumPages(numPages);
-    setViewerPageNumber(1);
-  };
-
-  const handleViewerPrevPage = () => {
-    setViewerPageNumber((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleViewerNextPage = () => {
-    setViewerPageNumber((prev) => (viewerNumPages ? Math.min(prev + 1, viewerNumPages) : prev + 1));
-  };
-
-  const handleViewerZoomIn = () => {
-    setViewerZoom((prev) => Math.min(prev + 0.25, 2));
-  };
-
-  const handleViewerZoomOut = () => {
-    setViewerZoom((prev) => Math.max(prev - 0.25, 0.5));
-  };
-
-  const handleViewerResetZoom = () => {
-    setViewerZoom(1);
-  };
 
   const currentIssue = issues.find(issue => issue.isCurrent);
   const archives = issues.filter(issue => !issue.isCurrent);
@@ -108,6 +62,12 @@ const JournalIssues = () => {
     acc[volumeKey].push(issue);
     return acc;
   }, {});
+
+  useEffect(() => {
+    if (expandedVolumeKey) return;
+    const firstKey = Object.keys(archivesByVolume)[0];
+    if (firstKey) setExpandedVolumeKey(firstKey);
+  }, [archivesByVolume, expandedVolumeKey]);
 
   const mapBackendPaperToIssueCard = (paper) => ({
     id: paper.id,
@@ -165,44 +125,22 @@ const JournalIssues = () => {
   const PaperCard = ({ paper }) => (
     <div className="border-l-4 border-amber-600 pl-4 py-2 mb-4 last:mb-0">
       <p className="text-sm text-slate-700">
-        <span className="font-semibold text-slate-900">Title:</span> {paper.title},
+        <span className="font-semibold text-slate-900">Title:</span>{' '}
+        {paper.pdfUrl ? (
+          <a
+            href={paper.pdfUrl}
+            download
+            className="text-amber-700 hover:underline"
+          >
+            {paper.title}
+          </a>
+        ) : (
+          <span className="text-slate-900">{paper.title}</span>
+        )}
       </p>
       <p className="text-sm text-slate-700 mt-1">
         <span className="font-semibold text-slate-900">Authors:</span> {getAuthorsText(paper.authors)}
       </p>
-      <p className="text-sm text-slate-700 mt-1">
-        <span className="font-semibold text-slate-900">Paper link:</span>{' '}
-        {paper.id ? (
-          <a
-            href={`/p/${paper.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-amber-700 hover:underline"
-          >
-            {`/p/${paper.id}`}
-          </a>
-        ) : (
-          <span className="text-slate-600">N/A</span>
-        )}
-      </p>
-      {paper.pdfUrl && (
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-          <button
-            type="button"
-            onClick={() => handleOpenViewer(paper)}
-            className="text-sm text-amber-700 hover:underline inline-block"
-          >
-            View Full Paper
-          </button>
-          <a
-            href={paper.pdfUrl}
-            download
-            className="text-sm text-amber-700 hover:underline inline-block"
-          >
-            Download Paper
-          </a>
-        </div>
-      )}
     </div>
   );
 
@@ -237,14 +175,21 @@ const JournalIssues = () => {
               <p className="text-slate-600 text-justify">Loading current issue...</p>
             ) : currentIssue ? (
               <>
-                <p className="text-slate-700 mb-4 text-justify">
-                  <strong>Volume {currentIssue.volume}, Issue {currentIssue.issue} – {currentIssue.month}, {currentIssue.year}</strong>
-                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 border border-amber-200 text-slate-800 mb-4">
+                  <span className="font-semibold">Volume {currentIssue.volume}</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="font-medium">Issue {currentIssue.issue}</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-700">{currentIssue.month}, {currentIssue.year}</span>
+                  <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
 
                 {papersLoading ? (
                   <p className="text-slate-600 text-justify">Loading papers for this issue...</p>
                 ) : currentIssuePapers.length > 0 ? (
-                  <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {currentIssuePapers.map((paper) => (
                       <PaperCard key={paper.id} paper={mapBackendPaperToIssueCard(paper)} />
                     ))}
@@ -272,55 +217,78 @@ const JournalIssues = () => {
               <p className="text-slate-600 text-justify">Loading archives...</p>
             ) : (
               <div className="space-y-6">
-                {Object.entries(archivesByVolume).map(([volume, issuesInVolume]) => (
-                  <div key={volume}>
-                    <h3 className="text-xl font-bold text-slate-800 mb-4">{volume}</h3>
-                    <div className="space-y-4">
-                      {issuesInVolume.map((issue) => (
-                        <div
-                          key={issue.id}
-                          className="bg-slate-50 p-4 rounded-lg border border-slate-200 cursor-pointer"
-                          onClick={() => handleArchiveIssueClick(issue)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium text-slate-900">
-                              Issue {issue.issue}, {issue.year}
-                            </span>
-                            <span className="text-xs text-amber-700">
-                              {expandedIssueId === issue.id ? 'Hide' : 'View'}
-                            </span>
-                          </div>
+                {Object.entries(archivesByVolume).map(([volume, issuesInVolume]) => {
+                  const isVolumeExpanded = expandedVolumeKey === volume;
 
-                          {expandedIssueId === issue.id && (
-                            <div className="mt-3 pt-3 border-t border-slate-200">
-                              {archivePapersLoadingId === issue.id ? (
-                                <p className="text-sm text-slate-600">Loading papers...</p>
-                              ) : (archiveIssuePapers[issue.id] || []).length === 0 ? (
-                                <p className="text-sm text-slate-600">No papers available.</p>
-                              ) : (
-                                (archiveIssuePapers[issue.id] || []).map((paper) => (
-                                  <div key={paper.id} className="border-l-4 border-amber-500 pl-3 py-1 mb-2 last:mb-0">
-                                    <a
-                                      href={paper.pdfUrl || '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-sm font-medium text-amber-800 hover:underline"
-                                    >
-                                      {paper.title}
-                                    </a>
-                                    <p className="text-xs text-slate-600 mt-1">
-                                      {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors}
-                                    </p>
-                                  </div>
-                                ))
+                  return (
+                    <div key={volume}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedVolumeKey((prev) => (prev === volume ? null : volume))}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-slate-800"
+                      >
+                        <span className="text-lg font-bold">{volume}</span>
+                        <svg
+                          className={`w-5 h-5 text-amber-700 transition-transform ${isVolumeExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {isVolumeExpanded && (
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {issuesInVolume.map((issue) => (
+                            <div
+                              key={issue.id}
+                              className="bg-white p-4 rounded-lg border border-slate-200 hover:shadow-sm transition cursor-pointer"
+                              onClick={() => handleArchiveIssueClick(issue)}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="font-medium text-slate-900">
+                                  Issue {issue.issue}, {issue.year}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs text-amber-700">
+                                  {expandedIssueId === issue.id ? 'Hide' : 'View'}
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </span>
+                              </div>
+
+                              {expandedIssueId === issue.id && (
+                                <div className="mt-3 pt-3 border-t border-slate-200">
+                                  {archivePapersLoadingId === issue.id ? (
+                                    <p className="text-sm text-slate-600">Loading papers...</p>
+                                  ) : (archiveIssuePapers[issue.id] || []).length === 0 ? (
+                                    <p className="text-sm text-slate-600">No papers available.</p>
+                                  ) : (
+                                    (archiveIssuePapers[issue.id] || []).map((paper) => (
+                                      <div key={paper.id} className="border-l-4 border-amber-500 pl-3 py-1 mb-2 last:mb-0">
+                                        <a
+                                          href={paper.pdfUrl || '#'}
+                                          download
+                                          className="text-sm font-medium text-amber-800 hover:underline"
+                                        >
+                                          {paper.title}
+                                        </a>
+                                        <p className="text-xs text-slate-600 mt-1">
+                                          {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors}
+                                        </p>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
                               )}
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
@@ -361,104 +329,6 @@ const JournalIssues = () => {
         </div>
       </div>
 
-      {viewerPaper && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-              <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-slate-900 truncate">{viewerPaper.title}</h2>
-                <p className="text-xs text-slate-600 truncate">{getAuthorsText(viewerPaper.authors)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseViewer}
-                className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full p-2"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="bg-slate-900" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-              <div className="flex flex-col items-center py-6">
-                <Document
-                  file={viewerPaper.pdfUrl}
-                  onLoadSuccess={handleViewerDocumentLoadSuccess}
-                  loading={<div className="text-slate-100 text-sm">Loading PDF...</div>}
-                  error={<div className="text-red-200 text-sm">Failed to load PDF.</div>}
-                >
-                  <Page pageNumber={viewerPageNumber} height={650} scale={viewerZoom} />
-                </Document>
-
-                {viewerNumPages && (
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-100 justify-center">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleViewerZoomOut}
-                        className="px-2 py-1 rounded bg-slate-800 disabled:opacity-50"
-                        disabled={viewerZoom <= 0.5}
-                      >
-                        -
-                      </button>
-                      <span>{Math.round(viewerZoom * 100)}%</span>
-                      <button
-                        type="button"
-                        onClick={handleViewerZoomIn}
-                        className="px-2 py-1 rounded bg-slate-800 disabled:opacity-50"
-                        disabled={viewerZoom >= 2}
-                      >
-                        +
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleViewerResetZoom}
-                        className="px-3 py-1 rounded bg-slate-800/70 hover:bg-slate-800"
-                      >
-                        Reset
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleViewerPrevPage}
-                        disabled={viewerPageNumber <= 1}
-                        className="px-3 py-1 rounded bg-slate-800 disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <span>
-                        Page {viewerPageNumber} of {viewerNumPages}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleViewerNextPage}
-                        disabled={viewerNumPages && viewerPageNumber >= viewerNumPages}
-                        className="px-3 py-1 rounded bg-slate-800 disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
-              <a
-                href={viewerPaper.pdfUrl}
-                download
-                className="text-sm text-amber-700 hover:underline"
-              >
-                Download
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -14,7 +14,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || null;
+
+  const getDashboardPath = (role) => {
+    if (role === 'admin') return '/admin-dashboard';
+    if (role === 'reviewer') return '/reviewer-dashboard';
+    return '/author-dashboard';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +30,8 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result && result.success) {
-        navigate(from, { replace: true });
+        const dashboardPath = getDashboardPath(result?.user?.role);
+        navigate(from || dashboardPath, { replace: true });
       } else {
         setError(result?.error || 'Failed to sign in. Please check your credentials.');
       }
@@ -51,7 +58,8 @@ const Login = () => {
 
       const result = await login(creds.email, creds.password);
       if (result && result.success) {
-        navigate('/');
+        const dashboardPath = getDashboardPath(result?.user?.role);
+        navigate(dashboardPath, { replace: true });
       } else {
         setError(result?.error || 'Demo login failed.');
       }

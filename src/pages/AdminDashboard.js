@@ -60,6 +60,10 @@ const AdminDashboard = () => {
   const [importantDatesLoading, setImportantDatesLoading] = useState(false);
   const [importantDatesSaving, setImportantDatesSaving] = useState(false);
 
+  const [editorialBoard, setEditorialBoard] = useState([]);
+  const [editorialBoardLoading, setEditorialBoardLoading] = useState(false);
+  const [editorialBoardSaving, setEditorialBoardSaving] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [reviewerSortBy, setReviewerSortBy] = useState('name_az');
@@ -156,6 +160,29 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    const loadEditorialBoard = async () => {
+      try {
+        setEditorialBoardLoading(true);
+        const result = await mockAPI.getEditorialBoard();
+        if (result.success && Array.isArray(result.board)) {
+          setEditorialBoard(result.board);
+        } else {
+          setEditorialBoard([]);
+        }
+      } catch (err) {
+        console.error('Failed to load editorial board', err);
+        setEditorialBoard([]);
+      } finally {
+        setEditorialBoardLoading(false);
+      }
+    };
+
+    if (user && user.role === 'admin') {
+      loadEditorialBoard();
+    }
+  }, [user]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -210,6 +237,51 @@ const AdminDashboard = () => {
       setAlert({ type: 'error', message: 'An error occurred while assigning the reviewer.' });
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleEditorialMemberChange = (id, field, value) => {
+    setEditorialBoard((prev) =>
+      (prev || []).map((m) => (m.id === id ? { ...m, [field]: value } : m))
+    );
+  };
+
+  const handleAddEditorialMember = () => {
+    const newId = `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    setEditorialBoard((prev) => ([
+      ...(prev || []),
+      {
+        id: newId,
+        section: 'Associate Editors',
+        name: '',
+        title: '',
+        affiliation: '',
+        email: '',
+      }
+    ]));
+  };
+
+  const handleRemoveEditorialMember = (id) => {
+    setEditorialBoard((prev) => (prev || []).filter((m) => m.id !== id));
+  };
+
+  const handleSaveEditorialBoard = async () => {
+    try {
+      setEditorialBoardSaving(true);
+      const result = await mockAPI.saveEditorialBoard(editorialBoard);
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Editorial Board updated successfully.' });
+        if (Array.isArray(result.board)) {
+          setEditorialBoard(result.board);
+        }
+      } else {
+        setAlert({ type: 'error', message: result.error || 'Failed to save Editorial Board.' });
+      }
+    } catch (err) {
+      console.error('Failed to save editorial board', err);
+      setAlert({ type: 'error', message: 'Failed to save Editorial Board.' });
+    } finally {
+      setEditorialBoardSaving(false);
     }
   };
 
@@ -611,6 +683,116 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'editorial_board' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Editorial Board</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage the members displayed on the Editorial Board page.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddEditorialMember}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
+                >
+                  Add Member
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEditorialBoard}
+                  disabled={editorialBoardSaving}
+                  className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                >
+                  {editorialBoardSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {editorialBoardLoading ? (
+              <div className="text-sm text-gray-600">Loading...</div>
+            ) : (
+              <div className="space-y-4">
+                {(editorialBoard || []).length === 0 ? (
+                  <div className="text-sm text-gray-600">
+                    No members added yet. Click "Add Member" to start.
+                  </div>
+                ) : (
+                  (editorialBoard || []).map((m) => (
+                    <div key={m.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="text-sm font-semibold text-gray-900">Member</div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEditorialMember(m.id)}
+                          className="text-xs text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                          <input
+                            type="text"
+                            value={m.section || ''}
+                            onChange={(e) => handleEditorialMemberChange(m.id, 'section', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="e.g., Editor-in-Chief"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                          <input
+                            type="text"
+                            value={m.name || ''}
+                            onChange={(e) => handleEditorialMemberChange(m.id, 'name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="Full name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Title / Designation</label>
+                          <input
+                            type="text"
+                            value={m.title || ''}
+                            onChange={(e) => handleEditorialMemberChange(m.id, 'title', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="e.g., Professor, Dept. of ..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                          <input
+                            type="text"
+                            value={m.affiliation || ''}
+                            onChange={(e) => handleEditorialMemberChange(m.id, 'affiliation', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="Institute / Organization"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                          <input
+                            type="email"
+                            value={m.email || ''}
+                            onChange={(e) => handleEditorialMemberChange(m.id, 'email', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            placeholder="name@example.com"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
@@ -724,6 +906,16 @@ const AdminDashboard = () => {
                 }`}
               >
                 Important Dates
+              </button>
+              <button
+                onClick={() => setActiveTab('editorial_board')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'editorial_board'
+                    ? 'border-amber-700 text-amber-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Editorial Board
               </button>
             </nav>
           </div>

@@ -613,6 +613,42 @@ export const mockAPI = {
       console.error('saveImportantDates error', error);
       return { success: false, error: 'Failed to save important dates.' };
     }
+  },
+
+  getEditorialBoard: async () => {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/settings/editorial-board`);
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to load editorial board.' };
+      }
+
+      return { success: true, board: data.board || null };
+    } catch (error) {
+      console.error('getEditorialBoard error', error);
+      return { success: false, error: 'Failed to load editorial board.' };
+    }
+  },
+
+  saveEditorialBoard: async (board) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/editorial-board`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ board }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to save editorial board.' };
+      }
+
+      return { success: true, board: data.board || null };
+    } catch (error) {
+      console.error('saveEditorialBoard error', error);
+      return { success: false, error: 'Failed to save editorial board.' };
+    }
   }
 };
 

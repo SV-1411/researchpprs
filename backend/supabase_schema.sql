@@ -154,6 +154,16 @@ create table if not exists public.notifications (
 create index if not exists notifications_user_idx on public.notifications (user_id, read);
 
 -- =========================
+-- SITE SETTINGS (KEY/VALUE)
+-- =========================
+
+create table if not exists public.site_settings (
+  key        text primary key,
+  value      jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+-- =========================
 -- JOURNAL ISSUES
 -- =========================
 

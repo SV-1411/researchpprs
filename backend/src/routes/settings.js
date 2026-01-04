@@ -13,6 +13,7 @@ const ensureSupabase = (res) => {
 
 const SETTINGS_TABLE = process.env.SUPABASE_SETTINGS_TABLE || 'site_settings';
 const IMPORTANT_DATES_KEY = 'important_dates';
+const EDITORIAL_BOARD_KEY = 'editorial_board';
 
 // GET /api/settings/important-dates
 router.get('/important-dates', async (req, res) => {
@@ -65,6 +66,71 @@ router.post('/important-dates', async (req, res) => {
   } catch (err) {
     console.error('Unexpected error in POST /api/settings/important-dates', err);
     return res.status(500).json({ success: false, error: 'Failed to save important dates.' });
+  }
+});
+
+// GET /api/settings/editorial-board
+router.get('/editorial-board', async (req, res) => {
+  try {
+    if (!ensureSupabase(res)) return;
+
+    const { data, error } = await supabase
+      .from(SETTINGS_TABLE)
+      .select('key, value')
+      .eq('key', EDITORIAL_BOARD_KEY)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching editorial board', error);
+      return res.status(500).json({ success: false, error: 'Failed to load editorial board.' });
+    }
+
+    return res.json({ success: true, board: data?.value || null });
+  } catch (err) {
+    console.error('Unexpected error in GET /api/settings/editorial-board', err);
+    return res.status(500).json({ success: false, error: 'Failed to load editorial board.' });
+  }
+});
+
+// POST /api/settings/editorial-board
+router.post('/editorial-board', async (req, res) => {
+  try {
+    if (!ensureSupabase(res)) return;
+
+    const { board } = req.body || {};
+
+    if (!Array.isArray(board)) {
+      return res.status(400).json({ success: false, error: 'board array is required.' });
+    }
+
+    const cleaned = board
+      .map((m) => ({
+        id: m?.id,
+        section: String(m?.section || '').trim(),
+        name: String(m?.name || '').trim(),
+        title: String(m?.title || '').trim(),
+        affiliation: String(m?.affiliation || '').trim(),
+        email: String(m?.email || '').trim(),
+      }))
+      .filter((m) => m.section && m.name);
+
+    const { error } = await supabase
+      .from(SETTINGS_TABLE)
+      .upsert({
+        key: EDITORIAL_BOARD_KEY,
+        value: cleaned,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'key' });
+
+    if (error) {
+      console.error('Error saving editorial board', error);
+      return res.status(500).json({ success: false, error: 'Failed to save editorial board.' });
+    }
+
+    return res.json({ success: true, board: cleaned });
+  } catch (err) {
+    console.error('Unexpected error in POST /api/settings/editorial-board', err);
+    return res.status(500).json({ success: false, error: 'Failed to save editorial board.' });
   }
 });
 

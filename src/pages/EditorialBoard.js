@@ -1,8 +1,47 @@
 // EditorialBoard.js (or .tsx)
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { mockAPI } from '../data/mockData';
 
 const EditorialBoard = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [board, setBoard] = useState([]);
+
+  useEffect(() => {
+    const loadBoard = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const result = await mockAPI.getEditorialBoard();
+        if (result.success && Array.isArray(result.board)) {
+          setBoard(result.board);
+        } else {
+          setBoard([]);
+          setError(result.error || 'Editorial board is not configured yet.');
+        }
+      } catch (e) {
+        console.error('Failed to load editorial board', e);
+        setBoard([]);
+        setError('Failed to load editorial board.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBoard();
+  }, []);
+
+  const sections = useMemo(() => {
+    const groups = {};
+    (board || []).forEach((m) => {
+      const key = String(m?.section || '').trim() || 'Editorial Board';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
+    });
+    return groups;
+  }, [board]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 text-slate-800">
       <h1 className="text-3xl font-bold text-center mb-6 text-slate-900">
@@ -12,62 +51,34 @@ const EditorialBoard = () => {
        
       </p>
 
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Editor-in-Chief</h2>
-        <div className="bg-slate-50 p-5 rounded-lg shadow-sm">
-          <p className="font-bold text-lg">Dr. Navnath D. Kale</p>
-          <p className="text-slate-700">Senior Assistant Professor, Dept. of Computer Engineering</p>
-          <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
-          <p className="mt-2 text-slate-600">Email: <a href="mailto:editor@ijepa.org" className="text-amber-600 hover:underline">editor@ijepa.org</a></p>
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">Associate Editors</h2>
-        <div className="space-y-4">
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. Yogesh Gurav</p>
-            <p className="text-slate-700">Dean Academics & Research,</p>
-            <p className="text-slate-700">Dr. D. Y. Patil Technical Campus, Talegaon, Pune, India</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:ybgurav1977@gmail.com" className="text-amber-600 hover:underline">ybgurav1977@gmail.com</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. Sandeep Kadam</p>
-            <p className="text-slate-700">Principal, Keystone School of Engineering, Pune, India</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:sandeep.kadam@gmail.com" className="text-amber-600 hover:underline">sandeep.kadam@gmail.com</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. M. Venkateshwara Rao</p>
-            <p className="text-slate-700">Professor, Dept. of Computer Science and Engineering,</p>
-            <p className="text-slate-700">Vignana Bharathi Institute of Technology, Ghatkesar, Hyderabad, India.</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:venkateshwara.rao@vbithyd.ac.in" className="text-amber-600 hover:underline">venkateshwara.rao@vbithyd.ac.in</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. Pramod Ganjewar</p>
-            <p className="text-slate-700">Head, Dept of Computer Engineering,</p>
-            <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:pdganjewar@mitaoe.ac.in" className="text-amber-600 hover:underline">pdganjewar@mitaoe.ac.in</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. Manish Giri</p>
-            <p className="text-slate-700">Head, Dept. of Computer Engineering (Software Engineering)</p>
-            <p className="text-slate-700">MIT Academy of Engineering, Pune, India.</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:mbgiri@mitaoe.ac.in" className="text-amber-600 hover:underline">mbgiri@mitaoe.ac.in</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. G. Arun</p>
-            <p className="text-slate-700">Associate Professor, Dept. of Computer Science and Engineering,</p>
-            <p className="text-slate-700">Vignana Bharathi Institute of Technology, Ghatkesar, Hyderabad, India.</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:g.arun@vbithyd.ac.in" className="text-amber-600 hover:underline">g.arun@vbithyd.ac.in</a></p>
-          </div>
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium">Dr. Royyuru Srikanth</p>
-            <p className="text-slate-700">Assistant Professor, Dept. of Computer Science and Engineering</p>
-            <p className="text-slate-700">Vardhaman College of Engineering, Hyderabad, India</p>
-            <p className="text-slate-600 text-sm">Email: <a href="mailto:srikanth.r@gmail.com" className="text-amber-600 hover:underline">srikanth.r@gmail.com</a></p>
-          </div>
-        </div>
-      </section>
+      {loading ? (
+        <div className="text-center text-slate-600 py-10">Loading editorial board...</div>
+      ) : Object.keys(sections).length === 0 ? (
+        <div className="text-center text-slate-600 py-10">{error || 'No editorial board members found.'}</div>
+      ) : (
+        Object.entries(sections).map(([sectionName, members]) => (
+          <section key={sectionName} className="mb-10">
+            <h2 className="text-2xl font-semibold mb-4 text-slate-800 border-b pb-2">{sectionName}</h2>
+            <div className="space-y-4">
+              {members.map((m) => (
+                <div key={m.id || `${m.section}-${m.name}-${m.email}`} className="bg-slate-50 p-4 rounded-lg">
+                  <p className="font-medium">{m.name}</p>
+                  {m.title && <p className="text-slate-700">{m.title}</p>}
+                  {m.affiliation && <p className="text-slate-700">{m.affiliation}</p>}
+                  {m.email && (
+                    <p className="text-slate-600 text-sm">
+                      Email:{' '}
+                      <a href={`mailto:${m.email}`} className="text-amber-600 hover:underline">
+                        {m.email}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       {/* Join the Editorial Board */}
       <section className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-lg mb-10">
