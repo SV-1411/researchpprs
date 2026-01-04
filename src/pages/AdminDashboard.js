@@ -63,6 +63,16 @@ const AdminDashboard = () => {
   const [editorialBoard, setEditorialBoard] = useState([]);
   const [editorialBoardLoading, setEditorialBoardLoading] = useState(false);
   const [editorialBoardSaving, setEditorialBoardSaving] = useState(false);
+  const [editorialSearchTerm, setEditorialSearchTerm] = useState('');
+  const [showEditorialModal, setShowEditorialModal] = useState(false);
+  const [editingEditorialId, setEditingEditorialId] = useState(null);
+  const [editorialDraft, setEditorialDraft] = useState({
+    section: 'Associate Editors',
+    name: '',
+    title: '',
+    affiliation: '',
+    email: '',
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -263,6 +273,71 @@ const AdminDashboard = () => {
 
   const handleRemoveEditorialMember = (id) => {
     setEditorialBoard((prev) => (prev || []).filter((m) => m.id !== id));
+  };
+
+  const openAddEditorialModal = () => {
+    setEditingEditorialId(null);
+    setEditorialDraft({
+      section: 'Associate Editors',
+      name: '',
+      title: '',
+      affiliation: '',
+      email: '',
+    });
+    setShowEditorialModal(true);
+  };
+
+  const openEditEditorialModal = (member) => {
+    setEditingEditorialId(member?.id || null);
+    setEditorialDraft({
+      section: member?.section || 'Associate Editors',
+      name: member?.name || '',
+      title: member?.title || '',
+      affiliation: member?.affiliation || '',
+      email: member?.email || '',
+    });
+    setShowEditorialModal(true);
+  };
+
+  const closeEditorialModal = () => {
+    setShowEditorialModal(false);
+    setEditingEditorialId(null);
+  };
+
+  const handleEditorialDraftChange = (field, value) => {
+    setEditorialDraft((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveEditorialDraft = () => {
+    const trimmed = {
+      section: String(editorialDraft.section || '').trim(),
+      name: String(editorialDraft.name || '').trim(),
+      title: String(editorialDraft.title || '').trim(),
+      affiliation: String(editorialDraft.affiliation || '').trim(),
+      email: String(editorialDraft.email || '').trim(),
+    };
+
+    if (!trimmed.section || !trimmed.name) {
+      setAlert({ type: 'error', message: 'Section and Name are required.' });
+      return;
+    }
+
+    if (editingEditorialId) {
+      setEditorialBoard((prev) =>
+        (prev || []).map((m) => (m.id === editingEditorialId ? { ...m, ...trimmed } : m))
+      );
+    } else {
+      const newId = `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      setEditorialBoard((prev) => ([
+        ...(prev || []),
+        { id: newId, ...trimmed },
+      ]));
+    }
+
+    closeEditorialModal();
   };
 
   const handleSaveEditorialBoard = async () => {
@@ -683,116 +758,6 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'editorial_board' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Editorial Board</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage the members displayed on the Editorial Board page.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleAddEditorialMember}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
-                >
-                  Add Member
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveEditorialBoard}
-                  disabled={editorialBoardSaving}
-                  className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
-                >
-                  {editorialBoardSaving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-
-            {editorialBoardLoading ? (
-              <div className="text-sm text-gray-600">Loading...</div>
-            ) : (
-              <div className="space-y-4">
-                {(editorialBoard || []).length === 0 ? (
-                  <div className="text-sm text-gray-600">
-                    No members added yet. Click "Add Member" to start.
-                  </div>
-                ) : (
-                  (editorialBoard || []).map((m) => (
-                    <div key={m.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between gap-4 mb-4">
-                        <div className="text-sm font-semibold text-gray-900">Member</div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveEditorialMember(m.id)}
-                          className="text-xs text-red-600 hover:text-red-800 font-medium"
-                        >
-                          Remove
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
-                          <input
-                            type="text"
-                            value={m.section || ''}
-                            onChange={(e) => handleEditorialMemberChange(m.id, 'section', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="e.g., Editor-in-Chief"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                          <input
-                            type="text"
-                            value={m.name || ''}
-                            onChange={(e) => handleEditorialMemberChange(m.id, 'name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="Full name"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Title / Designation</label>
-                          <input
-                            type="text"
-                            value={m.title || ''}
-                            onChange={(e) => handleEditorialMemberChange(m.id, 'title', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="e.g., Professor, Dept. of ..."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
-                          <input
-                            type="text"
-                            value={m.affiliation || ''}
-                            onChange={(e) => handleEditorialMemberChange(m.id, 'affiliation', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="Institute / Organization"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                          <input
-                            type="email"
-                            value={m.email || ''}
-                            onChange={(e) => handleEditorialMemberChange(m.id, 'email', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                            placeholder="name@example.com"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
@@ -957,6 +922,191 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'editorial_board' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Editorial Board</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Search members by name/section/email and click a name to edit.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={openAddEditorialModal}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
+                >
+                  Add Member
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEditorialBoard}
+                  disabled={editorialBoardSaving}
+                  className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                >
+                  {editorialBoardSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <input
+                type="text"
+                value={editorialSearchTerm}
+                onChange={(e) => setEditorialSearchTerm(e.target.value)}
+                placeholder="Search by name, section, affiliation, email..."
+                className="w-full md:max-w-lg px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+              />
+            </div>
+
+            {editorialBoardLoading ? (
+              <div className="text-sm text-gray-600">Loading...</div>
+            ) : (
+              <div className="border border-gray-200 rounded-lg divide-y">
+                {(editorialBoard || [])
+                  .filter((m) => {
+                    if (!editorialSearchTerm.trim()) return true;
+                    const q = editorialSearchTerm.toLowerCase();
+                    return (
+                      (m?.name || '').toLowerCase().includes(q) ||
+                      (m?.section || '').toLowerCase().includes(q) ||
+                      (m?.email || '').toLowerCase().includes(q) ||
+                      (m?.affiliation || '').toLowerCase().includes(q)
+                    );
+                  })
+                  .map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => openEditEditorialModal(m)}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between gap-4"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 truncate">
+                          {m.name || '(No name)'}
+                        </div>
+                        <div className="text-xs text-gray-600 truncate">
+                          {m.section || 'Editorial Board'}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-400">Edit</div>
+                    </button>
+                  ))}
+
+                {(editorialBoard || []).length === 0 && (
+                  <div className="px-4 py-6 text-sm text-gray-600">No members found.</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {showEditorialModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {editingEditorialId ? 'Edit Member' : 'Add Member'}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={closeEditorialModal}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                    <input
+                      type="text"
+                      value={editorialDraft.section}
+                      onChange={(e) => handleEditorialDraftChange('section', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="e.g., Editor-in-Chief"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={editorialDraft.name}
+                      onChange={(e) => handleEditorialDraftChange('name', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="Full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title / Designation</label>
+                    <input
+                      type="text"
+                      value={editorialDraft.title}
+                      onChange={(e) => handleEditorialDraftChange('title', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="e.g., Professor, Dept. of ..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                    <input
+                      type="text"
+                      value={editorialDraft.affiliation}
+                      onChange={(e) => handleEditorialDraftChange('affiliation', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="Institute / Organization"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={editorialDraft.email}
+                      onChange={(e) => handleEditorialDraftChange('email', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      placeholder="name@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  {editingEditorialId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRemoveEditorialMember(editingEditorialId);
+                        closeEditorialModal();
+                      }}
+                      className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="ml-auto flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={closeEditorialModal}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEditorialDraft}
+                      className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
