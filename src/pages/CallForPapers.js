@@ -18,17 +18,17 @@ const CallForPapers = () => {
   }, []);
 
   const fallbackDates = [
-    ['Publication Date', 'To be announced'],
     ['Manuscript Submission Deadline', '20 December 2024'],
     ['Notification of Acceptance', 'To be announced'],
-    ['Final Camera-Ready Paper Due', 'To be announced']
+    ['Final Camera-Ready Paper Due', 'To be announced'],
+    ['Publication Date', 'To be announced']
   ];
 
   const desiredDateOrder = [
-    'Publication Date',
     'Manuscript Submission Deadline',
     'Notification of Acceptance',
-    'Final Camera-Ready Paper Due'
+    'Final Camera-Ready Paper Due',
+    'Publication Date'
   ];
 
   const dateEntries = importantDates && typeof importantDates === 'object'

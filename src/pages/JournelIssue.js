@@ -7,6 +7,7 @@ const JournalIssues = () => {
   const [loading, setLoading] = useState(true);
   const [currentIssuePapers, setCurrentIssuePapers] = useState([]);
   const [papersLoading, setPapersLoading] = useState(false);
+  const [isCurrentIssueExpanded, setIsCurrentIssueExpanded] = useState(true);
   const [expandedIssueId, setExpandedIssueId] = useState(null);
   const [archiveIssuePapers, setArchiveIssuePapers] = useState({});
   const [archivePapersLoadingId, setArchivePapersLoadingId] = useState(null);
@@ -174,27 +175,38 @@ const JournalIssues = () => {
               <p className="text-slate-600 text-justify">Loading current issue...</p>
             ) : currentIssue ? (
               <>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 border border-amber-200 text-slate-800 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setIsCurrentIssueExpanded((prev) => !prev)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 border border-amber-200 text-slate-800 mb-4"
+                >
                   <span className="font-semibold">Volume {currentIssue.volume}</span>
                   <span className="text-slate-500">•</span>
                   <span className="font-medium">Issue {currentIssue.issue}</span>
                   <span className="text-slate-500">•</span>
                   <span className="text-slate-700">{currentIssue.month}, {currentIssue.year}</span>
-                  <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className={`w-4 h-4 text-amber-700 transition-transform ${isCurrentIssueExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
-                </div>
+                </button>
 
-                {papersLoading ? (
-                  <p className="text-slate-600 text-justify">Loading papers for this issue...</p>
-                ) : currentIssuePapers.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {currentIssuePapers.map((paper) => (
-                      <PaperCard key={paper.id} paper={mapBackendPaperToIssueCard(paper)} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-slate-600 text-justify">No papers have been assigned to this issue yet.</p>
+                {isCurrentIssueExpanded && (
+                  papersLoading ? (
+                    <p className="text-slate-600 text-justify">Loading papers for this issue...</p>
+                  ) : currentIssuePapers.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {currentIssuePapers.map((paper) => (
+                        <PaperCard key={paper.id} paper={mapBackendPaperToIssueCard(paper)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-600 text-justify">No papers have been assigned to this issue yet.</p>
+                  )
                 )}
               </>
             ) : (
