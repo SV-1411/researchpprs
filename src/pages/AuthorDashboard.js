@@ -809,7 +809,7 @@ const AuthorDashboard = () => {
                       <div className="flex justify-between items-center">
                         <div>
                           <span className="text-sm text-academic-600 font-medium">
-                            Submission fee: <span className="text-lg font-bold text-primary-600">₹150</span>
+                            Submission fee: <span className="text-lg font-bold text-primary-600">₹1500</span>
                           </span>
                           <p className="text-xs text-academic-500 mt-1">Complete payment to initiate review</p>
                         </div>
