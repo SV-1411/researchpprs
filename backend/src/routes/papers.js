@@ -11,6 +11,38 @@ const ensureSupabase = (res) => {
   return true;
 };
 
+// DELETE /api/papers/:id - delete a paper by id
+router.delete('/:id', async (req, res) => {
+  try {
+    if (!ensureSupabase(res)) return;
+
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid paper id.' });
+    }
+
+    const { error } = await supabase
+      .from('papers')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting paper', error, {
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        message: error.message,
+      });
+      return res.status(500).json({ success: false, error: 'Failed to delete paper.' });
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Unexpected error in DELETE /api/papers/:id', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete paper.' });
+  }
+});
+
 const mapPaperRow = (row, assignmentsByPaperId) => {
   const assignedReviewers = assignmentsByPaperId[row.id] || [];
 

@@ -38,6 +38,10 @@ const AdminDashboard = () => {
   const [rejectNote, setRejectNote] = useState('');
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
+  const [showDeletePaperModal, setShowDeletePaperModal] = useState(false);
+  const [deleteModalPaper, setDeleteModalPaper] = useState(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
   const [showAssignIssueModal, setShowAssignIssueModal] = useState(false);
   const [assignIssuePaper, setAssignIssuePaper] = useState(null);
   const [selectedIssueId, setSelectedIssueId] = useState('');
@@ -247,6 +251,32 @@ const AdminDashboard = () => {
       setAlert({ type: 'error', message: 'An error occurred while assigning the reviewer.' });
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const openDeletePaperModal = (paper) => {
+    setDeleteModalPaper(paper);
+    setShowDeletePaperModal(true);
+  };
+
+  const handleConfirmDeletePaper = async () => {
+    if (!deleteModalPaper) return;
+    setDeleteSubmitting(true);
+    try {
+      const result = await mockAPI.deletePaper(deleteModalPaper.id);
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Paper deleted successfully.' });
+        setShowDeletePaperModal(false);
+        setDeleteModalPaper(null);
+        await loadAdminData();
+      } else {
+        setAlert({ type: 'error', message: result.error || 'Failed to delete paper.' });
+      }
+    } catch (err) {
+      console.error('Failed to delete paper', err);
+      setAlert({ type: 'error', message: 'Failed to delete paper.' });
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -1110,6 +1140,61 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {showDeletePaperModal && deleteModalPaper && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">Delete Paper</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (deleteSubmitting) return;
+                      setShowDeletePaperModal(false);
+                      setDeleteModalPaper(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <p className="text-sm text-gray-700 mb-4">
+                  Are you sure you want to delete this paper?
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                  <div className="text-sm font-semibold text-gray-900">{deleteModalPaper.title}</div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    ID: {deleteModalPaper.id}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (deleteSubmitting) return;
+                      setShowDeletePaperModal(false);
+                      setDeleteModalPaper(null);
+                    }}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeletePaper}
+                    disabled={deleteSubmitting}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                  >
+                    {deleteSubmitting ? 'Deleting...' : 'Yes, Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Papers List */}
         {activeTab === 'submissions' && (
           <>
@@ -1147,14 +1232,26 @@ const AdminDashboard = () => {
                 <div key={paper.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
-                    <span className={`${
-                      paper.status === 'published' ? 'badge-success' :
-                      paper.status === 'under_review' ? 'badge-warning' :
-                      paper.status === 'submitted' ? 'badge-info' :
-                      'badge-danger'
-                    }`}>
-                      {paper.status.replace('_', ' ').toUpperCase()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openDeletePaperModal(paper)}
+                        className="p-2 rounded-lg hover:bg-red-50 text-red-600"
+                        title="Delete paper"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.5 3a1 1 0 00-1 1v1H5a1 1 0 000 2h.293l.853 10.24A2 2 0 008.14 19h3.72a2 2 0 001.994-1.76L14.707 7H15a1 1 0 100-2h-2.5V4a1 1 0 00-1-1h-3zM9.5 5V4h1v1h-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <span className={`${
+                        paper.status === 'published' ? 'badge-success' :
+                        paper.status === 'under_review' ? 'badge-warning' :
+                        paper.status === 'submitted' ? 'badge-info' :
+                        'badge-danger'
+                      }`}>
+                        {paper.status.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -1255,9 +1352,21 @@ const AdminDashboard = () => {
               <div key={paper.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                    PENDING ASSIGNMENT
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openDeletePaperModal(paper)}
+                      className="p-2 rounded-lg hover:bg-red-50 text-red-600"
+                      title="Delete paper"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.5 3a1 1 0 00-1 1v1H5a1 1 0 000 2h.293l.853 10.24A2 2 0 008.14 19h3.72a2 2 0 001.994-1.76L14.707 7H15a1 1 0 100-2h-2.5V4a1 1 0 00-1-1h-3zM9.5 5V4h1v1h-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                      PENDING ASSIGNMENT
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mb-4 space-y-2 text-sm">
@@ -1330,9 +1439,21 @@ const AdminDashboard = () => {
                           </span>
                         )}
                       </div>
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
-                        UNDER REVIEW
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openDeletePaperModal(paper)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-red-600"
+                          title="Delete paper"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.5 3a1 1 0 00-1 1v1H5a1 1 0 000 2h.293l.853 10.24A2 2 0 008.14 19h3.72a2 2 0 001.994-1.76L14.707 7H15a1 1 0 100-2h-2.5V4a1 1 0 00-1-1h-3zM9.5 5V4h1v1h-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap">
+                          UNDER REVIEW
+                        </span>
+                      </div>
                     </div>
 
                     {reviews.length > 0 && (

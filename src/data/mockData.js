@@ -649,6 +649,24 @@ export const mockAPI = {
       console.error('saveEditorialBoard error', error);
       return { success: false, error: 'Failed to save editorial board.' };
     }
+  },
+
+  deletePaper: async (paperId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/papers/${paperId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to delete paper.' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('deletePaper error', error);
+      return { success: false, error: 'Failed to delete paper.' };
+    }
   }
 };
 
