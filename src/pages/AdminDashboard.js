@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Alert from '../components/Alert';
 import { mockAPI } from '../data/mockData';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -41,6 +44,33 @@ const AdminDashboard = () => {
   const [showDeletePaperModal, setShowDeletePaperModal] = useState(false);
   const [deleteModalPaper, setDeleteModalPaper] = useState(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  const [showAdminSubmitModal, setShowAdminSubmitModal] = useState(false);
+  const [adminSubmitForm, setAdminSubmitForm] = useState({
+    fullName: '',
+    email: '',
+    affiliation: '',
+    paperTitle: '',
+    keywords: '',
+    comments: '',
+    coAuthorsText: '',
+    manuscriptFile: null,
+    copyrightFile: null,
+  });
+  const [adminSubmittingPaper, setAdminSubmittingPaper] = useState(false);
+
+  const [showPdfViewerModal, setShowPdfViewerModal] = useState(false);
+  const [pdfViewerPaper, setPdfViewerPaper] = useState(null);
+  const [pdfNumPages, setPdfNumPages] = useState(null);
+  const [pdfPageNumber, setPdfPageNumber] = useState(1);
+  const [pdfZoom, setPdfZoom] = useState(1);
+  const [pdfViewerError, setPdfViewerError] = useState('');
+
+  const [showReplaceFilesModal, setShowReplaceFilesModal] = useState(false);
+  const [replaceFilesPaper, setReplaceFilesPaper] = useState(null);
+  const [replaceManuscriptFile, setReplaceManuscriptFile] = useState(null);
+  const [replaceCopyrightFile, setReplaceCopyrightFile] = useState(null);
+  const [replaceFilesSubmitting, setReplaceFilesSubmitting] = useState(false);
 
   const [showAssignIssueModal, setShowAssignIssueModal] = useState(false);
   const [assignIssuePaper, setAssignIssuePaper] = useState(null);
@@ -146,6 +176,152 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   }, [user]);
+
+  const handleAdminSubmitFormChange = (e) => {
+    const { name, value, files } = e.target;
+    setAdminSubmitForm((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
+
+  const parseCoAuthorsText = (rawText) => {
+    const lines = String(rawText || '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    return lines
+      .map((line) => {
+        const parts = line.split('|').map((p) => p.trim());
+        return {
+          fullName: parts[0] || '',
+          affiliation: parts[1] || '',
+          email: parts[2] || '',
+        };
+      })
+      .filter((a) => a.fullName || a.affiliation || a.email);
+  };
+
+  const handleAdminSubmitNewPaper = async (e) => {
+    e.preventDefault();
+
+    try {
+      setAdminSubmittingPaper(true);
+      setAlert(null);
+
+      const coAuthors = parseCoAuthorsText(adminSubmitForm.coAuthorsText);
+
+      const result = await mockAPI.submitFullPaper({
+        fullName: adminSubmitForm.fullName,
+        email: adminSubmitForm.email,
+        affiliation: adminSubmitForm.affiliation,
+        paperTitle: adminSubmitForm.paperTitle,
+        keywords: adminSubmitForm.keywords,
+        comments: adminSubmitForm.comments,
+        coAuthors,
+        manuscriptFile: adminSubmitForm.manuscriptFile,
+        copyrightFile: adminSubmitForm.copyrightFile,
+      });
+
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Paper submitted successfully.' });
+        setShowAdminSubmitModal(false);
+        setAdminSubmitForm({
+          fullName: '',
+          email: '',
+          affiliation: '',
+          paperTitle: '',
+          keywords: '',
+          comments: '',
+          coAuthorsText: '',
+          manuscriptFile: null,
+          copyrightFile: null,
+        });
+        await loadAdminData();
+      } else {
+        setAlert({ type: 'error', message: result.error || 'Failed to submit paper.' });
+      }
+    } catch (err) {
+      console.error('Admin submit paper failed', err);
+      setAlert({ type: 'error', message: 'Failed to submit paper.' });
+    } finally {
+      setAdminSubmittingPaper(false);
+    }
+  };
+
+  const openPdfViewer = (paper) => {
+    setPdfViewerPaper(paper);
+    setPdfNumPages(null);
+    setPdfPageNumber(1);
+    setPdfZoom(1);
+    setPdfViewerError('');
+    setShowPdfViewerModal(true);
+  };
+
+  const closePdfViewer = () => {
+    setShowPdfViewerModal(false);
+    setPdfViewerPaper(null);
+    setPdfNumPages(null);
+    setPdfPageNumber(1);
+    setPdfZoom(1);
+    setPdfViewerError('');
+  };
+
+  const onPdfLoadSuccess = ({ numPages }) => {
+    setPdfNumPages(numPages);
+    setPdfPageNumber(1);
+  };
+
+  const handlePdfPrevPage = () => setPdfPageNumber((prev) => Math.max(prev - 1, 1));
+  const handlePdfNextPage = () => setPdfPageNumber((prev) => (pdfNumPages ? Math.min(prev + 1, pdfNumPages) : prev + 1));
+  const handlePdfZoomIn = () => setPdfZoom((prev) => Math.min(prev + 0.25, 2));
+  const handlePdfZoomOut = () => setPdfZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handlePdfResetZoom = () => setPdfZoom(1);
+
+  const openReplaceFilesModal = (paper) => {
+    setReplaceFilesPaper(paper);
+    setReplaceManuscriptFile(null);
+    setReplaceCopyrightFile(null);
+    setShowReplaceFilesModal(true);
+  };
+
+  const closeReplaceFilesModal = () => {
+    if (replaceFilesSubmitting) return;
+    setShowReplaceFilesModal(false);
+    setReplaceFilesPaper(null);
+    setReplaceManuscriptFile(null);
+    setReplaceCopyrightFile(null);
+  };
+
+  const handleConfirmReplaceFiles = async () => {
+    if (!replaceFilesPaper) return;
+    if (!replaceManuscriptFile && !replaceCopyrightFile) {
+      setAlert({ type: 'error', message: 'Please choose at least one file to upload.' });
+      return;
+    }
+
+    try {
+      setReplaceFilesSubmitting(true);
+      const result = await mockAPI.adminReplacePaperFiles(replaceFilesPaper.id, {
+        manuscriptFile: replaceManuscriptFile,
+        copyrightFile: replaceCopyrightFile,
+      });
+
+      if (result.success) {
+        setAlert({ type: 'success', message: 'Paper files updated successfully.' });
+        closeReplaceFilesModal();
+        await loadAdminData();
+      } else {
+        setAlert({ type: 'error', message: result.error || 'Failed to update paper files.' });
+      }
+    } catch (err) {
+      console.error('Admin replace files failed', err);
+      setAlert({ type: 'error', message: 'Failed to update paper files.' });
+    } finally {
+      setReplaceFilesSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     loadAdminData();
@@ -788,6 +964,324 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {showAdminSubmitModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Submit New Paper (Admin)</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (adminSubmittingPaper) return;
+                      setShowAdminSubmitModal(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handleAdminSubmitNewPaper} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Corresponding Author Name</label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={adminSubmitForm.fullName}
+                        onChange={handleAdminSubmitFormChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Corresponding Author Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={adminSubmitForm.email}
+                        onChange={handleAdminSubmitFormChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Affiliation</label>
+                    <input
+                      type="text"
+                      name="affiliation"
+                      value={adminSubmitForm.affiliation}
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Paper Title</label>
+                    <input
+                      type="text"
+                      name="paperTitle"
+                      value={adminSubmitForm.paperTitle}
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Keywords (comma-separated)</label>
+                    <input
+                      type="text"
+                      name="keywords"
+                      value={adminSubmitForm.keywords}
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Abstract / Comments</label>
+                    <textarea
+                      name="comments"
+                      value={adminSubmitForm.comments}
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700 resize-none"
+                      rows={5}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Co-authors (one per line: Name | Affiliation | Email)</label>
+                    <textarea
+                      name="coAuthorsText"
+                      value={adminSubmitForm.coAuthorsText}
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700 resize-none"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Manuscript (PDF)</label>
+                      <input
+                        type="file"
+                        name="manuscriptFile"
+                        accept="application/pdf"
+                        onChange={handleAdminSubmitFormChange}
+                        className="w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Copyright Form (PDF)</label>
+                      <input
+                        type="file"
+                        name="copyrightFile"
+                        accept="application/pdf"
+                        onChange={handleAdminSubmitFormChange}
+                        className="w-full"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminSubmitModal(false)}
+                      disabled={adminSubmittingPaper}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={adminSubmittingPaper}
+                      className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                    >
+                      {adminSubmittingPaper ? 'Submitting...' : 'Submit Paper'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showReplaceFilesModal && replaceFilesPaper && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">Upload/Replace Paper Files</h2>
+                  <button
+                    type="button"
+                    onClick={closeReplaceFilesModal}
+                    className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="text-sm text-gray-700 mb-4 font-medium line-clamp-2">{replaceFilesPaper.title}</div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Manuscript (optional)</label>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => setReplaceManuscriptFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Copyright Form (optional)</label>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => setReplaceCopyrightFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 mt-6">
+                  <button
+                    type="button"
+                    onClick={closeReplaceFilesModal}
+                    disabled={replaceFilesSubmitting}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmReplaceFiles}
+                    disabled={replaceFilesSubmitting}
+                    className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                  >
+                    {replaceFilesSubmitting ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showPdfViewerModal && pdfViewerPaper && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl w-full max-w-6xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col">
+              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">{pdfViewerPaper.title}</div>
+                  <div className="text-xs text-gray-500">Paper ID: {pdfViewerPaper.id}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {pdfViewerPaper.pdfUrl && (
+                    <a
+                      href={pdfViewerPaper.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg"
+                    >
+                      Download
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={closePdfViewer}
+                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg p-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 bg-gray-900 overflow-y-auto">
+                <div className="py-6 flex flex-col items-center">
+                  {pdfViewerError ? (
+                    <div className="text-red-200 text-sm">{pdfViewerError}</div>
+                  ) : (
+                    <Document
+                      file={pdfViewerPaper.pdfUrl}
+                      onLoadSuccess={onPdfLoadSuccess}
+                      loading={<div className="text-gray-100 text-sm"><LoadingSpinner size="sm" text="Loading PDF..." /></div>}
+                      error={<div className="text-red-200 text-sm">Failed to load PDF.</div>}
+                      onLoadError={() => setPdfViewerError('Failed to load PDF.')}
+                    >
+                      <Page pageNumber={pdfPageNumber} height={700} scale={pdfZoom} />
+                    </Document>
+                  )}
+
+                  {pdfNumPages && (
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-100 justify-center">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handlePdfZoomOut}
+                          className="px-2 py-1 rounded bg-gray-800 disabled:opacity-50"
+                          disabled={pdfZoom <= 0.5}
+                        >
+                          -
+                        </button>
+                        <span>{Math.round(pdfZoom * 100)}%</span>
+                        <button
+                          type="button"
+                          onClick={handlePdfZoomIn}
+                          className="px-2 py-1 rounded bg-gray-800 disabled:opacity-50"
+                          disabled={pdfZoom >= 2}
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePdfResetZoom}
+                          className="px-3 py-1 rounded bg-gray-800/70 hover:bg-gray-800"
+                        >
+                          Reset
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handlePdfPrevPage}
+                          disabled={pdfPageNumber <= 1}
+                          className="px-3 py-1 rounded bg-gray-800 disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <span>
+                          Page {pdfPageNumber} of {pdfNumPages}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handlePdfNextPage}
+                          disabled={pdfNumPages && pdfPageNumber >= pdfNumPages}
+                          className="px-3 py-1 rounded bg-gray-800 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
@@ -1207,6 +1701,13 @@ const AdminDashboard = () => {
                 className="w-full md:max-w-md px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
               />
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminSubmitModal(true)}
+                  className="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold rounded-lg"
+                >
+                  Submit New Paper
+                </button>
                 <select
                   value={adminSortBy}
                   onChange={(e) => setAdminSortBy(e.target.value)}
@@ -1278,12 +1779,13 @@ const AdminDashboard = () => {
                   <div className="flex flex-wrap gap-2 mb-5">
                     {paper.pdfUrl && (
                       <>
-                        <a
-                          href={`/review/paper/${paper.id}`}
+                        <button
+                          type="button"
+                          onClick={() => openPdfViewer(paper)}
                           className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg"
                         >
                           View Paper
-                        </a>
+                        </button>
                         <a
                           href={paper.pdfUrl}
                           target="_blank"
@@ -1294,6 +1796,13 @@ const AdminDashboard = () => {
                         </a>
                       </>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => openReplaceFilesModal(paper)}
+                      className="px-3 py-2 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold rounded-lg"
+                    >
+                      Upload / Replace
+                    </button>
                     {paper.copyrightUrl && (
                       <a
                         href={paper.copyrightUrl}
@@ -1376,6 +1885,45 @@ const AdminDashboard = () => {
                 </div>
 
                 <p className="text-gray-700 text-sm mb-5 line-clamp-3">{paper.abstract}</p>
+
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {paper.pdfUrl && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openPdfViewer(paper)}
+                        className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg"
+                      >
+                        View Paper
+                      </button>
+                      <a
+                        href={paper.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg"
+                      >
+                        Download Paper
+                      </a>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => openReplaceFilesModal(paper)}
+                    className="px-3 py-2 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold rounded-lg"
+                  >
+                    Upload / Replace
+                  </button>
+                  {paper.copyrightUrl && (
+                    <a
+                      href={paper.copyrightUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg"
+                    >
+                      Download Copyright
+                    </a>
+                  )}
+                </div>
 
                 <div className="pt-4 border-t border-gray-200">
                   <button
@@ -1482,6 +2030,54 @@ const AdminDashboard = () => {
                     </div>
 
                     <p className="text-gray-700 text-sm mb-5 line-clamp-3">{paper.abstract}</p>
+
+                    <div className="flex flex-wrap gap-2 mb-5">
+                      {paper.pdfUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openPdfViewer(paper)}
+                            className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg"
+                          >
+                            View Paper
+                          </button>
+                          <a
+                            href={paper.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg"
+                          >
+                            Download Paper
+                          </a>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openReplaceFilesModal(paper)}
+                        className="px-3 py-2 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold rounded-lg"
+                      >
+                        Upload / Replace
+                      </button>
+                      {paper.copyrightUrl && (
+                        <a
+                          href={paper.copyrightUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg"
+                        >
+                          Download Copyright
+                        </a>
+                      )}
+                      {paper.status !== 'revisions_requested' && (
+                        <button
+                          type="button"
+                          onClick={() => openRequestRevisionsModal(paper)}
+                          className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-lg"
+                        >
+                          Request Revisions
+                        </button>
+                      )}
+                    </div>
 
                     {paper.assignedReviewers && (
                       <div className="mb-5 text-sm text-gray-600">

@@ -294,6 +294,74 @@ export const mockAPI = {
     }
   },
 
+  submitFullPaper: async (payload) => {
+    try {
+      const formData = new FormData();
+      formData.append('fullName', payload.fullName || '');
+      formData.append('email', payload.email || '');
+      formData.append('affiliation', payload.affiliation || '');
+      formData.append('paperTitle', payload.paperTitle || '');
+      formData.append('keywords', payload.keywords || '');
+      formData.append('comments', payload.comments || '');
+
+      if (Array.isArray(payload.coAuthors)) {
+        formData.append('coAuthors', JSON.stringify(payload.coAuthors));
+      }
+      if (payload.userId) {
+        formData.append('userId', String(payload.userId));
+      }
+
+      if (payload.manuscriptFile) {
+        formData.append('manuscript', payload.manuscriptFile);
+      }
+      if (payload.copyrightFile) {
+        formData.append('copyrightForm', payload.copyrightFile);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/submissions`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to submit paper.' };
+      }
+
+      return { success: true, paper: data.paper };
+    } catch (error) {
+      console.error('submitFullPaper error', error);
+      return { success: false, error: 'Failed to submit paper.' };
+    }
+  },
+
+  adminReplacePaperFiles: async (paperId, files) => {
+    try {
+      const formData = new FormData();
+      if (files?.manuscriptFile) {
+        formData.append('manuscript', files.manuscriptFile);
+      }
+      if (files?.copyrightFile) {
+        formData.append('copyrightForm', files.copyrightFile);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/papers/${paperId}/files`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to update paper files.' };
+      }
+
+      return { success: true, manuscriptUrl: data.manuscriptUrl || null, copyrightUrl: data.copyrightUrl || null };
+    } catch (error) {
+      console.error('adminReplacePaperFiles error', error);
+      return { success: false, error: 'Failed to update paper files.' };
+    }
+  },
+
   // Reviews
   getReviewsByReviewer: async (reviewerId) => {
     try {

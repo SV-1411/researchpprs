@@ -1,7 +1,15 @@
 const express = require('express');
+const multer = require('multer');
 const { supabase } = require('../supabaseClient');
 
 const router = express.Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 20MB max per file
+  },
+});
 
 const ensureSupabase = (res) => {
   if (!supabase) {
@@ -10,6 +18,104 @@ const ensureSupabase = (res) => {
   }
   return true;
 };
+
+const getBucketName = () => process.env.SUPABASE_STORAGE_BUCKET || 'manuscripts';
+
+const uploadFileToStorage = async (file, pathPrefix = '') => {
+  if (!file) return null;
+
+  const bucket = getBucketName();
+  const normalizedPrefix = pathPrefix ? `${pathPrefix.replace(/\/+$/, '')}/` : '';
+  const filePath = `${normalizedPrefix}${Date.now()}-${file.originalname}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  return data?.publicUrl || null;
+};
+
+// POST /api/admin/papers/:paperId/files - replace manuscript/copyright files for an existing paper
+router.post(
+  '/papers/:paperId/files',
+  upload.fields([
+    { name: 'manuscript', maxCount: 1 },
+    { name: 'copyrightForm', maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      if (!ensureSupabase(res)) return;
+
+      const paperId = parseInt(req.params.paperId, 10);
+      if (Number.isNaN(paperId)) {
+        return res.status(400).json({ success: false, error: 'Invalid paper id.' });
+      }
+
+      const manuscriptFile = req.files?.manuscript?.[0] || null;
+      const copyrightFile = req.files?.copyrightForm?.[0] || null;
+
+      if (!manuscriptFile && !copyrightFile) {
+        return res.status(400).json({ success: false, error: 'At least one file (manuscript or copyright form) is required.' });
+      }
+
+      // Ensure paper exists
+      const { data: paper, error: paperError } = await supabase
+        .from('papers')
+        .select('id, main_author_id')
+        .eq('id', paperId)
+        .single();
+
+      if (paperError) {
+        console.error('Error loading paper before admin file replace', paperError);
+        return res.status(500).json({ success: false, error: 'Failed to load paper.' });
+      }
+
+      if (!paper) {
+        return res.status(404).json({ success: false, error: 'Paper not found.' });
+      }
+
+      const pathPrefix = paper.main_author_id ? `user-${paper.main_author_id}` : `paper-${paperId}`;
+
+      let manuscriptUrl = null;
+      let copyrightUrl = null;
+
+      if (manuscriptFile) {
+        manuscriptUrl = await uploadFileToStorage(manuscriptFile, `${pathPrefix}/manuscripts`);
+      }
+
+      if (copyrightFile) {
+        copyrightUrl = await uploadFileToStorage(copyrightFile, `${pathPrefix}/copyright`);
+      }
+
+      const updatePayload = {};
+      if (manuscriptUrl) updatePayload.pdf_url = manuscriptUrl;
+      if (copyrightUrl) updatePayload.copyright_url = copyrightUrl;
+
+      const { error: updateError } = await supabase
+        .from('papers')
+        .update(updatePayload)
+        .eq('id', paperId);
+
+      if (updateError) {
+        console.error('Error updating paper file URLs in admin replace', updateError);
+        return res.status(500).json({ success: false, error: 'Failed to update paper files.' });
+      }
+
+      return res.json({ success: true, manuscriptUrl, copyrightUrl });
+    } catch (err) {
+      console.error('Unexpected error in POST /api/admin/papers/:paperId/files', err);
+      return res.status(500).json({ success: false, error: 'Failed to update paper files.' });
+    }
+  }
+);
 
 // GET /api/admin/reviewers - list of reviewer users
 router.get('/reviewers', async (req, res) => {
