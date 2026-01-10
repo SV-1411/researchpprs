@@ -102,7 +102,9 @@ const JournalIssues = () => {
 
   const PaperCard = ({ paper }) => (
     <div className="bg-white rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500 mb-1">Paper ID: <span className="font-medium text-slate-700">{paper.id}</span></p>
+      <p className="text-sm text-slate-700 mb-1">
+        <span className="font-semibold text-slate-900">Paper ID:</span> {paper.id}
+      </p>
       <p className="text-sm text-slate-700">
         <span className="font-semibold text-slate-900">Title:</span>{' '}
         {paper.pdfUrl ? (
@@ -279,7 +281,9 @@ const JournalIssues = () => {
                                   ) : (
                                     (archiveIssuePapers[issue.id] || []).map((paper) => (
                                       <div key={paper.id} className="bg-white rounded-lg border border-slate-200 p-3 mb-2 last:mb-0">
-                                        <p className="text-[11px] text-slate-500 mb-1">Paper ID: <span className="font-medium text-slate-700">{paper.id}</span></p>
+                                        <p className="text-xs text-slate-700 mb-1">
+                                          <span className="font-semibold text-slate-900">Paper ID:</span> {paper.id}
+                                        </p>
                                         <a
                                           href={paper.pdfUrl || '#'}
                                           download
