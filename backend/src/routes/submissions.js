@@ -74,14 +74,16 @@ router.post(
       const manuscriptFile = req.files?.manuscript?.[0] || null;
       const copyrightFile = req.files?.copyrightForm?.[0] || null;
 
-      if (!manuscriptFile || !copyrightFile) {
-        return res.status(400).json({ success: false, error: 'Both manuscript and copyright form files are required.' });
+      if (!manuscriptFile) {
+        return res.status(400).json({ success: false, error: 'Manuscript file is required.' });
       }
 
       const pathPrefix = userId ? `user-${userId}` : 'anonymous';
 
       const manuscriptUrl = await uploadFileToStorage(manuscriptFile, `${pathPrefix}/manuscripts`);
-      const copyrightUrl = await uploadFileToStorage(copyrightFile, `${pathPrefix}/copyright`);
+      const copyrightUrl = copyrightFile
+        ? await uploadFileToStorage(copyrightFile, `${pathPrefix}/copyright`)
+        : null;
 
       const keywordArray = keywords
         ? keywords
@@ -181,19 +183,21 @@ router.post(
       }
 
       // Best-effort: persist copyright URL on the paper record (requires papers.copyright_url column)
-      try {
-        if (data?.id && copyrightUrl) {
-          const { error: copyrightUpdateError } = await supabase
-            .from('papers')
-            .update({ copyright_url: copyrightUrl })
-            .eq('id', data.id);
+      if (copyrightUrl) {
+        try {
+          if (data?.id) {
+            const { error: copyrightUpdateError } = await supabase
+              .from('papers')
+              .update({ copyright_url: copyrightUrl })
+              .eq('id', data.id);
 
-          if (copyrightUpdateError) {
-            console.warn('Unable to persist copyright_url on paper record', copyrightUpdateError);
+            if (copyrightUpdateError) {
+              console.warn('Unable to persist copyright_url on paper record', copyrightUpdateError);
+            }
           }
+        } catch (copyrightPersistErr) {
+          console.warn('Unexpected error persisting copyright_url', copyrightPersistErr);
         }
-      } catch (copyrightPersistErr) {
-        console.warn('Unexpected error persisting copyright_url', copyrightPersistErr);
       }
 
       return res.json({

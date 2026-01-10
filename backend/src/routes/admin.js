@@ -197,22 +197,6 @@ router.post('/publish-paper', async (req, res) => {
       return res.status(400).json({ success: false, error: 'paperId is required.' });
     }
 
-    // Ensure there is at least one completed review before publishing
-    const { count, error: reviewCountError } = await supabase
-      .from('reviews')
-      .select('id', { count: 'exact', head: true })
-      .eq('paper_id', paperId)
-      .eq('status', 'completed');
-
-    if (reviewCountError) {
-      console.error('Error counting reviews before publish', reviewCountError);
-      return res.status(500).json({ success: false, error: 'Failed to verify reviews before publishing.' });
-    }
-
-    if (!count || count < 1) {
-      return res.status(400).json({ success: false, error: 'Cannot publish paper without at least one completed review.' });
-    }
-
     // Load paper to notify the main author after publishing
     const { data: paper, error: paperError } = await supabase
       .from('papers')

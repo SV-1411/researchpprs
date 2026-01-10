@@ -53,11 +53,14 @@ const AdminDashboard = () => {
     paperTitle: '',
     keywords: '',
     comments: '',
-    coAuthorsText: '',
     manuscriptFile: null,
-    copyrightFile: null,
   });
+  const [adminSubmitCoAuthors, setAdminSubmitCoAuthors] = useState([]);
   const [adminSubmittingPaper, setAdminSubmittingPaper] = useState(false);
+
+  const [pendingMenuPaperId, setPendingMenuPaperId] = useState(null);
+  const [showQuickPublishModal, setShowQuickPublishModal] = useState(false);
+  const [quickPublishPaper, setQuickPublishPaper] = useState(null);
 
   const [showPdfViewerModal, setShowPdfViewerModal] = useState(false);
   const [pdfViewerPaper, setPdfViewerPaper] = useState(null);
@@ -185,22 +188,21 @@ const AdminDashboard = () => {
     }));
   };
 
-  const parseCoAuthorsText = (rawText) => {
-    const lines = String(rawText || '')
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean);
+  const addAdminCoAuthor = () => {
+    setAdminSubmitCoAuthors((prev) => ([
+      ...(prev || []),
+      { fullName: '', affiliation: '', email: '' },
+    ]));
+  };
 
-    return lines
-      .map((line) => {
-        const parts = line.split('|').map((p) => p.trim());
-        return {
-          fullName: parts[0] || '',
-          affiliation: parts[1] || '',
-          email: parts[2] || '',
-        };
-      })
-      .filter((a) => a.fullName || a.affiliation || a.email);
+  const updateAdminCoAuthor = (index, field, value) => {
+    setAdminSubmitCoAuthors((prev) =>
+      (prev || []).map((a, i) => (i === index ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const removeAdminCoAuthor = (index) => {
+    setAdminSubmitCoAuthors((prev) => (prev || []).filter((_a, i) => i !== index));
   };
 
   const handleAdminSubmitNewPaper = async (e) => {
@@ -210,7 +212,13 @@ const AdminDashboard = () => {
       setAdminSubmittingPaper(true);
       setAlert(null);
 
-      const coAuthors = parseCoAuthorsText(adminSubmitForm.coAuthorsText);
+      const coAuthors = (adminSubmitCoAuthors || [])
+        .map((a) => ({
+          fullName: String(a?.fullName || '').trim(),
+          affiliation: String(a?.affiliation || '').trim(),
+          email: String(a?.email || '').trim(),
+        }))
+        .filter((a) => a.fullName || a.affiliation || a.email);
 
       const result = await mockAPI.submitFullPaper({
         fullName: adminSubmitForm.fullName,
@@ -221,7 +229,6 @@ const AdminDashboard = () => {
         comments: adminSubmitForm.comments,
         coAuthors,
         manuscriptFile: adminSubmitForm.manuscriptFile,
-        copyrightFile: adminSubmitForm.copyrightFile,
       });
 
       if (result.success) {
@@ -234,10 +241,9 @@ const AdminDashboard = () => {
           paperTitle: '',
           keywords: '',
           comments: '',
-          coAuthorsText: '',
           manuscriptFile: null,
-          copyrightFile: null,
         });
+        setAdminSubmitCoAuthors([]);
         await loadAdminData();
       } else {
         setAlert({ type: 'error', message: result.error || 'Failed to submit paper.' });
@@ -1057,39 +1063,71 @@ const AdminDashboard = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Co-authors (one per line: Name | Affiliation | Email)</label>
-                    <textarea
-                      name="coAuthorsText"
-                      value={adminSubmitForm.coAuthorsText}
-                      onChange={handleAdminSubmitFormChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-700 focus:border-amber-700 resize-none"
-                      rows={4}
-                    />
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Co-authors</label>
+                      <button
+                        type="button"
+                        onClick={addAdminCoAuthor}
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg"
+                      >
+                        Add Co-author
+                      </button>
+                    </div>
+
+                    {(adminSubmitCoAuthors || []).length === 0 ? (
+                      <div className="text-xs text-gray-500">No co-authors added.</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {(adminSubmitCoAuthors || []).map((co, idx) => (
+                          <div key={idx} className="border border-gray-200 rounded-lg p-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <input
+                                type="text"
+                                value={co.fullName}
+                                onChange={(e) => updateAdminCoAuthor(idx, 'fullName', e.target.value)}
+                                placeholder="Name"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                              />
+                              <input
+                                type="text"
+                                value={co.affiliation}
+                                onChange={(e) => updateAdminCoAuthor(idx, 'affiliation', e.target.value)}
+                                placeholder="Affiliation"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                              />
+                              <input
+                                type="email"
+                                value={co.email}
+                                onChange={(e) => updateAdminCoAuthor(idx, 'email', e.target.value)}
+                                placeholder="Email"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-700 focus:border-amber-700"
+                              />
+                            </div>
+                            <div className="flex justify-end mt-2">
+                              <button
+                                type="button"
+                                onClick={() => removeAdminCoAuthor(idx)}
+                                className="text-xs font-semibold text-red-600 hover:text-red-700"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Manuscript (PDF)</label>
-                      <input
-                        type="file"
-                        name="manuscriptFile"
-                        accept="application/pdf"
-                        onChange={handleAdminSubmitFormChange}
-                        className="w-full"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Copyright Form (PDF)</label>
-                      <input
-                        type="file"
-                        name="copyrightFile"
-                        accept="application/pdf"
-                        onChange={handleAdminSubmitFormChange}
-                        className="w-full"
-                        required
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manuscript (PDF)</label>
+                    <input
+                      type="file"
+                      name="manuscriptFile"
+                      accept="application/pdf"
+                      onChange={handleAdminSubmitFormChange}
+                      className="w-full"
+                      required
+                    />
                   </div>
 
                   <div className="flex items-center justify-end gap-2 pt-2">
@@ -1860,7 +1898,37 @@ const AdminDashboard = () => {
             {papers.filter(p => p.status === 'submitted').map(paper => (
               <div key={paper.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
+                  <div className="flex items-start gap-2 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
+                    <div className="relative flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setPendingMenuPaperId((prev) => (prev === paper.id ? null : paper.id))}
+                        className="mt-0.5 text-black hover:text-gray-700"
+                        title="Actions"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.16l3.71-3.93a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
+                        </svg>
+                      </button>
+
+                      {pendingMenuPaperId === paper.id && (
+                        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPendingMenuPaperId(null);
+                              setQuickPublishPaper(paper);
+                              setShowQuickPublishModal(true);
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-50"
+                          >
+                            Publish Paper
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -1938,6 +2006,57 @@ const AdminDashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {showQuickPublishModal && quickPublishPaper && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-md w-full shadow-2xl">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">Publish Paper</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowQuickPublishModal(false);
+                      setQuickPublishPaper(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <p className="text-sm text-gray-700 mb-4">Are you sure you want to publish this paper?</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5">
+                  <div className="text-sm font-semibold text-gray-900 line-clamp-2">{quickPublishPaper.title}</div>
+                  <div className="text-xs text-gray-600 mt-1">ID: {quickPublishPaper.id}</div>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowQuickPublishModal(false);
+                      setQuickPublishPaper(null);
+                    }}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const paperId = quickPublishPaper.id;
+                      setShowQuickPublishModal(false);
+                      setQuickPublishPaper(null);
+                      await handlePublishPaper(paperId);
+                    }}
+                    className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg"
+                  >
+                    Yes, Publish
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -2107,18 +2226,11 @@ const AdminDashboard = () => {
                       </div>
                     )}
 
-                    {reviews.length === 0 && (
-                      <p className="mb-5 text-xs text-gray-500">
-                        At least one completed review is required before making a final decision.
-                      </p>
-                    )}
-
                     <div className="pt-4 border-t border-gray-200">
                       <div className="flex space-x-3">
                         <button
                           onClick={() => handlePublishPaper(paper.id)}
-                          disabled={reviews.length === 0}
-                          className="Btn disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="Btn"
                         >
                           <strong>Publish Paper</strong>
                         </button>
