@@ -1770,39 +1770,7 @@ const AdminDashboard = () => {
               {visibleAdminPapers.map(paper => (
                 <div key={paper.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-start gap-2 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
-                      {paper.status !== 'published' && (
-                        <div className="relative flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setPendingMenuPaperId((prev) => (prev === paper.id ? null : paper.id))}
-                            className="mt-0.5 text-black hover:text-gray-700"
-                            title="Actions"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.16l3.71-3.93a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
-                            </svg>
-                          </button>
-
-                          {pendingMenuPaperId === paper.id && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setPendingMenuPaperId(null);
-                                  setQuickPublishPaper(paper);
-                                  setShowQuickPublishModal(true);
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-50"
-                              >
-                                Publish Paper
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{paper.title}</h3>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -1867,6 +1835,15 @@ const AdminDashboard = () => {
                     >
                       Upload / Replace
                     </button>
+                    {paper.status !== 'published' && (
+                      <button
+                        type="button"
+                        onClick={() => handlePublishPaper(paper.id)}
+                        className="Btn"
+                      >
+                        <strong>Publish Paper</strong>
+                      </button>
+                    )}
         
                   </div>
 
