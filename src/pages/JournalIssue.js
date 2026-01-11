@@ -124,7 +124,10 @@ const JournalIssues = () => {
   };
 
   const PaperCard = ({ paper }) => (
-    <div className="border-l-4 border-amber-600 pl-4 py-2 mb-4 last:mb-0">
+    <div className="bg-white rounded-lg border border-slate-200 p-4">
+      <p className="text-sm text-slate-700 mb-1">
+        <span className="font-semibold text-slate-900">Paper ID:IJEPA-</span> {paper.id}
+      </p>
       <p className="text-sm text-slate-700">
         <span className="font-semibold text-slate-900">Title:</span>{' '}
         {paper.pdfUrl ? (
